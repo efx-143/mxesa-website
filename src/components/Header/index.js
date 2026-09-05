@@ -1,0 +1,117 @@
+import { useEffect, useState } from 'react';
+
+import Banner from 'components/Banner';
+import Close from 'components/icons/Close';
+import MxesaLogo from 'components/icons/MxesaLogo';
+import Hamburger from 'components/icons/Hamburger';
+import { PREPTEMBER } from 'data/preptember.mjs';
+
+import {
+  HeaderRoot,
+  Logo,
+  MenuToggle,
+  Nav,
+  NavCta,
+  NavLinks,
+  PageNavLink,
+  SkipLink,
+  Wordmark,
+} from './Header.styles';
+
+/* The same destinations on every page — the homepage's section anchor
+   links are gone, so the nav no longer changes shape between pages.
+   `standalone` only decides where the wordmark goes: home from other
+   pages, back to the top on the landing page itself.
+
+   "Home" leads, spelled out rather than left to the wordmark: on the
+   landing page the wordmark scrolls to the top rather than navigating,
+   so without this link the way home is a logo that doesn't look like
+   one. "Find a Fest" follows it: the one link for someone who wants to
+   attend rather than run a Fest, and the destination every "notify me
+   when Fests are announced" ask used to stand in for. The Fests are
+   published, so the site points at them directly.
+
+   "Apply to Host" wears the CTA chip: during Preptember the nav's one
+   ask is the signed-in hub, where the countdown and the application
+   live. Hosting info and the FAQs sit between the two, in that order:
+   someone weighing whether to host reads the pitch before the detail.
+
+   Below the tablet breakpoint the links collapse behind a hamburger
+   toggle — there's no room for five items plus the wordmark at phone
+   widths. */
+const Header = ({ standalone = false }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [animate, setAnimate] = useState(false);
+
+  /* Enabled a tick after mount so the open/close transition never plays
+     across styled-components' SSR-to-client style handoff — see the
+     comment on NavLinks in Header.styles.js. */
+  useEffect(() => {
+    setAnimate(true);
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [menuOpen]);
+
+  return (
+    <>
+      <SkipLink href="#main">Skip to content</SkipLink>
+      {/* Above the nav rather than in it: the banner scrolls away with the
+          page while the nav stays put, and it sits after the skip link so
+          the first thing on the keyboard's path is still the way past all
+          of this. Every page renders Header, so this is what makes the
+          strip site-wide. */}
+      {PREPTEMBER && <Banner />}
+      <HeaderRoot>
+        <Nav as="nav" aria-label="Main navigation">
+          <Wordmark
+            href={standalone ? '/' : '#top'}
+            aria-label="MXESA 2026 home"
+          >
+            <Logo as={MxesaLogo} />
+          </Wordmark>
+          <MenuToggle
+            type="button"
+            aria-expanded={menuOpen}
+            aria-controls="mobile-nav-links"
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            {menuOpen ? <Close /> : <Hamburger />}
+          </MenuToggle>
+          <NavLinks
+            id="mobile-nav-links"
+            data-open={menuOpen ? 'true' : 'false'}
+            data-animate={animate ? 'true' : 'false'}
+          >
+            <PageNavLink href="/" onClick={() => setMenuOpen(false)}>
+              Home
+            </PageNavLink>
+            <PageNavLink href="#mission" onClick={() => setMenuOpen(false)}>
+              About the Club
+            </PageNavLink>
+            <PageNavLink href="/team" onClick={() => setMenuOpen(false)}>
+              Team
+            </PageNavLink>
+            <PageNavLink href="#history" onClick={() => setMenuOpen(false)}>
+              Gallery
+            </PageNavLink>
+            <NavCta href="#join" onClick={() => setMenuOpen(false)}>
+              Join MXESA
+            </NavCta>
+          </NavLinks>
+        </Nav>
+      </HeaderRoot>
+    </>
+  );
+};
+
+export default Header;

@@ -1,0 +1,70 @@
+spec:
+  name: hacktoberfest-nyc
+  region: nyc
+
+  alerts:
+    - rule: DEPLOYMENT_LIVE
+    - rule: DEPLOYMENT_FAILED
+
+  features:
+    - enable-kata-build
+
+  jobs:
+    - environment_slug: node-js
+      envs:
+        - key: CLOUDFLARE_ZONE_ID
+          scope: RUN_TIME
+        - key: CLOUDFLARE_API_TOKEN
+          scope: RUN_TIME
+          type: SECRET
+      github:
+        branch: production
+        deploy_on_push: true
+        repo: Hacktoberfest/hacktoberfest-2022
+      instance_count: 1
+      instance_size_slug: basic-xxs
+      kind: POST_DEPLOY
+      name: hacktoberfest-production-nyc-job
+      run_command: npm run postbuild
+      source_dir: /
+
+  static_sites:
+    - build_command: npm run build
+      environment_slug: node-js
+      envs:
+        - key: BASE_URL
+          scope: BUILD_TIME
+        # Optional. Unset, the code defaults to the live API origin
+        # https://hacktoberfest-api.mlh.com (src/lib/apiBase.mjs) — production needs
+        # no value here. Set it only to point a build at a different API, or
+        # to the literal value `mocked` for the fixtures build (no backend;
+        # sign-in fakes a session as Ada Lovelace).
+        - key: NEXT_PUBLIC_API_BASE_URL
+          scope: BUILD_TIME
+        - key: BUILD_ID
+          scope: BUILD_TIME
+          value: ${_self.COMMIT_HASH}
+      github:
+        branch: production
+        deploy_on_push: true
+        repo: Hacktoberfest/hacktoberfest-2022-frontend
+      name: hacktoberfest-production-nyc
+      output_dir: out
+      routes:
+        - path: /
+      source_dir: /
+
+  ingress:
+    rules:
+      - component:
+          name: hacktoberfest-production-nyc
+        match:
+          path:
+            prefix: /
+      - match:
+          path:
+            prefix: /security.txt
+        redirect:
+          authority: hacktoberfest.com
+          redirect_code: 301
+          uri: /.well-known/security.txt
