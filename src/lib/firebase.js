@@ -2,7 +2,7 @@ import { initializeApp, getApps } from 'firebase/app';
 import {
   getAuth,
   GoogleAuthProvider,
-  signInWithRedirect,
+  signInWithPopup,
   signOut,
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -27,9 +27,8 @@ const googleProvider = new GoogleAuthProvider();
 
 export const signInWithGoogle = async () => {
   try {
-    await signInWithRedirect(auth, googleProvider);
+    await signInWithPopup(auth, googleProvider);
   } catch (error) {
-    console.error('Error signing in with Google:', error);
     throw error;
   }
 };
@@ -38,7 +37,6 @@ export const resetPassword = async (email) => {
   try {
     await sendPasswordResetEmail(auth, email);
   } catch (error) {
-    console.error('Error sending password reset email:', error);
     throw error;
   }
 };
@@ -47,7 +45,6 @@ export const signOutUser = async () => {
   try {
     await signOut(auth);
   } catch (error) {
-    console.error('Error signing out:', error);
     throw error;
   }
 };
@@ -61,7 +58,6 @@ export const signInWithEmail = async (email, password) => {
     const result = await signInWithEmailAndPassword(auth, email, password);
     return result.user;
   } catch (error) {
-    console.error('Error signing in with email:', error);
     throw error;
   }
 };
@@ -71,7 +67,6 @@ export const signUpWithEmail = async (email, password) => {
     const result = await createUserWithEmailAndPassword(auth, email, password);
     return result.user;
   } catch (error) {
-    console.error('Error signing up with email:', error);
     throw error;
   }
 };

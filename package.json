@@ -35,6 +35,7 @@
   "dependencies": {
     "@protomaps/basemaps": "^5.7.2",
     "@typeform/embed-react": "^5.0.0",
+    "canvas-confetti": "^1.9.4",
     "country-list": "^2.3.0",
     "firebase": "^12.18.0",
     "flag-icons": "^7.5.0",

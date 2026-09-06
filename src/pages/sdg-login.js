@@ -201,7 +201,6 @@ export default function SdgLogin() {
       await signInWithGoogle();
       // the onAuthStateChange should trigger redirect
     } catch (error) {
-      console.error('Login failed:', error);
       if (
         error.code !== 'auth/popup-closed-by-user' &&
         error.code !== 'auth/cancelled-popup-request'
@@ -227,7 +226,6 @@ export default function SdgLogin() {
       await resetPassword(email);
       setFormMessage('Password reset email sent. Please check your inbox.');
     } catch (error) {
-      console.error('Reset password failed:', error);
       let errorMsg = error.message || 'Unknown error';
       if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-email') {
         errorMsg = 'No account found with this email.';
@@ -256,7 +254,6 @@ export default function SdgLogin() {
       }
       router.push('/sdg-dashboard');
     } catch (error) {
-      console.error('Authentication failed:', error);
       let errorMsg = error.message || 'Unknown error';
       if (error.code === 'auth/email-already-in-use') {
          errorMsg = 'This email is already registered. Try logging in instead.';

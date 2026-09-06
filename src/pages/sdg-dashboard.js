@@ -397,7 +397,13 @@ export default function SdgDashboard() {
 
             <Card>
               <CardTitle>Phase 1 Submission</CardTitle>
-              {user.uid === team.leader_uid ? (
+              {team.submission?.idea_title ? (
+                <div style={{ background: '#d4edda', padding: '16px', border: '2px solid #c3e6cb', marginBottom: '20px', color: '#155724' }}>
+                  <strong>✅ Submission Received!</strong> Your idea has been successfully submitted and is locked for review.
+                </div>
+              ) : null}
+
+              {user.uid === team.leader_uid && !team.submission?.idea_title ? (
                 <form onSubmit={handleSubmission}>
                   <FormGroup>
                     <label>Idea Title</label>
@@ -455,7 +461,9 @@ export default function SdgDashboard() {
                     )}
                   </p>
                   <p style={{ marginTop: '20px', color: colors.muted }}>
-                    Only the team leader can edit the submission.
+                    {team.submission?.idea_title 
+                      ? 'This submission is locked and cannot be edited.' 
+                      : 'Only the team leader can edit the submission.'}
                   </p>
                 </div>
               )}

@@ -265,5 +265,89 @@ def get_all_teams():
         print("Error fetching teams for admin:", e)
         return jsonify({'error': 'Internal server error'}), 500
 
+# --- MXESA Team API ---
+
+@app.route('/api/mxesa_team', methods=['GET'])
+def get_mxesa_team():
+    try:
+        members = []
+        members_ref = db.collection('mxesa_team').order_by('order')
+        for doc in members_ref.stream():
+            member = doc.to_dict()
+            member['id'] = doc.id
+            members.append(member)
+        return jsonify({'members': members}), 200
+    except Exception as e:
+        print("Error fetching MXESA team:", e)
+        return jsonify({'error': 'Internal server error'}), 500
+
+def verify_admin_token(req):
+    auth_header = req.headers.get('Authorization')
+    if not auth_header or auth_header != 'Admin mxesa_admin_authorized':
+        return False
+    return True
+
+@app.route('/api/admin/mxesa_team', methods=['POST'])
+def add_mxesa_member():
+    if not verify_admin_token(request):
+        return jsonify({'error': 'Unauthorized'}), 401
+    try:
+        data = request.json
+        member_data = {
+            'name': data.get('name', ''),
+            'role': data.get('role', ''),
+            'description': data.get('description', ''),
+            'photo': data.get('photo', ''),
+            'order': int(data.get('order', 0)),
+            'socials': {
+                'instagram': data.get('socials', {}).get('instagram', ''),
+                'linkedin': data.get('socials', {}).get('linkedin', ''),
+                'github': data.get('socials', {}).get('github', '')
+            }
+        }
+        doc_ref = db.collection('mxesa_team').document()
+        doc_ref.set(member_data)
+        member_data['id'] = doc_ref.id
+        return jsonify({'message': 'Member added successfully', 'member': member_data}), 201
+    except Exception as e:
+        print("Error adding member:", e)
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/admin/mxesa_team/<member_id>', methods=['PUT'])
+def edit_mxesa_member(member_id):
+    if not verify_admin_token(request):
+        return jsonify({'error': 'Unauthorized'}), 401
+    try:
+        data = request.json
+        member_data = {
+            'name': data.get('name', ''),
+            'role': data.get('role', ''),
+            'description': data.get('description', ''),
+            'photo': data.get('photo', ''),
+            'order': int(data.get('order', 0)),
+            'socials': {
+                'instagram': data.get('socials', {}).get('instagram', ''),
+                'linkedin': data.get('socials', {}).get('linkedin', ''),
+                'github': data.get('socials', {}).get('github', '')
+            }
+        }
+        db.collection('mxesa_team').document(member_id).update(member_data)
+        member_data['id'] = member_id
+        return jsonify({'message': 'Member updated successfully', 'member': member_data}), 200
+    except Exception as e:
+        print("Error updating member:", e)
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/admin/mxesa_team/<member_id>', methods=['DELETE'])
+def delete_mxesa_member(member_id):
+    if not verify_admin_token(request):
+        return jsonify({'error': 'Unauthorized'}), 401
+    try:
+        db.collection('mxesa_team').document(member_id).delete()
+        return jsonify({'message': 'Member deleted successfully'}), 200
+    except Exception as e:
+        print("Error deleting member:", e)
+        return jsonify({'error': 'Internal server error'}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

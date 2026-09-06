@@ -111,8 +111,8 @@ export const getInvolved = {
     },
     {
       id: 'ladies-rep',
-      tag: 'Ladies Representative',
-      title: 'Janhvi Patil',
+      tag: 'Ladies Secretary',
+      title: 'Janhavi Patil',
       copy: [],
       cta: 'View Profile',
     },

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import styled from 'styled-components';
@@ -78,200 +78,7 @@ const FlipIcon = () => (
   </svg>
 );
 
-// --- Committee Data: Head + Members per designation ---
-const COMMITTEE = [
-  {
-    id: 'president',
-    role: 'President',
-    featured: true,
-    head: {
-      name: 'Mr. Sanyam Chavan',
-      description: 'Leading the association with a vision for innovation.',
-      photo: '/sanyam1.png',
-      socials: { instagram: '#', linkedin: '#', github: '#' },
-    },
-    members: [],
-  },
-  {
-    id: 'vice-president',
-    role: 'Vice President',
-    featured: true,
-    head: {
-      name: 'Mr. Shivam Mohite',
-      description: 'Assisting the president and managing core operations.',
-      photo: '/shivam.jpeg',
-      socials: { instagram: '#', linkedin: '#', github: '#' },
-    },
-    members: [],
-  },
-  {
-    id: 'ladies-secretary',
-    role: 'Ladies Secretary',
-    featured: true,
-    head: {
-      name: 'Ms. Janhavi Patil',
-      description:
-        'Representing and empowering female students in the association.',
-      photo: '',
-      socials: { instagram: '#', linkedin: '#', github: '#' },
-    },
-    members: [],
-  },
-  {
-    id: 'treasurer',
-    role: 'Treasurer',
-    featured: true,
-    head: {
-      name: 'Mr. Chitranjan Bhalerao',
-      description: 'Managing the finances and budget for all events.',
-      photo: '',
-      socials: { instagram: '#', linkedin: '#', github: '#' },
-    },
-    members: [],
-  },
-  {
-    id: 'technical',
-    role: 'Technical Committee',
-    featured: false,
-    head: {
-      name: 'Mr. Yash Chavan',
-      description: 'Leading technical events, workshops, and hackathons.',
-      photo: '/yash.png',
-      socials: { instagram: '#', linkedin: '#', github: '#' },
-    },
-    members: [
-      { name: 'Mr. Aryan Hatgale', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-      { name: 'Mr. Prasad Patankar', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-      { name: 'Mr. Himanshu Bendale', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-      { name: 'Mr. Atharva Inamdar', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-      { name: 'Ms. Kunika Daiwalkar', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-    ],
-  },
-  {
-    id: 'newsletter',
-    role: 'Newsletter & Magazine',
-    featured: false,
-    head: {
-      name: 'Mr. Shreyash Ugile',
-      description: 'Curating content for the MXESA magazine and newsletters.',
-      photo: '',
-      socials: { instagram: '#', linkedin: '#', github: '#' },
-    },
-    members: [
-      { name: 'Mr. Sarthak Hase', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-      { name: 'Ms. Pratiksha Hatte', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-      { name: 'Ms. Gayatri Khandagale', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-      { name: 'Ms. Bhagyshree Jadhav', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-    ],
-  },
-  {
-    id: 'tnp',
-    role: 'T&P Coordinator',
-    featured: false,
-    head: {
-      name: 'Mr. Yojit Giri',
-      description:
-        'Facilitating training, placements, and alumni interactions.',
-      photo: '',
-      socials: { instagram: '#', linkedin: '#', github: '#' },
-    },
-    members: [
-      { name: 'Mr. Parth Konde', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-    ],
-  },
-  {
-    id: 'industry-connect',
-    role: 'Industry Connect',
-    featured: false,
-    head: {
-      name: 'Mr. Kaustubh Walunj',
-      description: 'Bridging the gap between students and the industry.',
-      photo: '',
-      socials: { instagram: '#', linkedin: '#', github: '#' },
-    },
-    members: [
-      { name: 'Ms. Komal Pawar', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-    ],
-  },
-  {
-    id: 'website',
-    role: 'Website Committee',
-    featured: false,
-    head: {
-      name: 'Mr. Shubhankar Tumne',
-      description: 'Managing the digital presence and official website.',
-      photo: '',
-      socials: { instagram: '#', linkedin: '#', github: '#' },
-    },
-    members: [
-      { name: 'Mr. Mrunal Rinit', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-      { name: 'Mr. Sanskar Khedkar', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-      { name: 'Mr. Anis Mulani', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-    ],
-  },
-  {
-    id: 'social-media',
-    role: 'Social Media',
-    featured: false,
-    head: {
-      name: 'Mr. Aditya Waghmare',
-      description: 'Managing official social media channels and outreach.',
-      photo: '/aditya.png',
-      socials: { instagram: '#', linkedin: '#', github: '#' },
-    },
-    members: [
-      { name: 'Mr. Ishwar Gaikwad', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-      { name: 'Ms. Shweta Shirture', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-    ],
-  },
-  {
-    id: 'cultural',
-    role: 'Cultural Committee',
-    featured: false,
-    head: {
-      name: 'Mr. Vedant Jadhav',
-      description: 'Organizing engaging cultural events and activities.',
-      photo: '',
-      socials: { instagram: '#', linkedin: '#', github: '#' },
-    },
-    members: [
-      { name: 'Mr. Aditya Thombare', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-      { name: 'Ms. Soham Gore', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-      { name: 'Ms. Sampriti Palande', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-      { name: 'Ms. Tina Waghode', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-      { name: 'Ms. Kalyani Shirsat', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-      { name: 'Ms. Trupti Gawande', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-    ],
-  },
-  {
-    id: 'sports',
-    role: 'Sports Committee',
-    featured: false,
-    head: {
-      name: 'Mr. Rishikesh Nikam',
-      description: 'Managing and promoting sports events for the association.',
-      photo: '/rushi.jpeg',
-      socials: { instagram: '#', linkedin: '#', github: '#' },
-    },
-    members: [
-      { name: 'Mr. Rajwardhan Bhosale', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-      { name: 'Mr. Sairaj Abnave', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-      { name: 'Mr. Aryan Hanbar', photo: '', socials: { instagram: '#', linkedin: '#', github: '#' } },
-    ],
-  },
-  {
-    id: 'library',
-    role: 'Library Coordinator',
-    featured: false,
-    head: {
-      name: 'Mr. Ganesh Kottawar',
-      description: 'Maintaining the departmental library and resources.',
-      photo: '',
-      socials: { instagram: '#', linkedin: '#', github: '#' },
-    },
-    members: [],
-  },
-];
+// --- Committee Data: Will be fetched from API ---
 
 // Faculty advisors
 const FACULTY = [
@@ -948,72 +755,123 @@ const FlipCard = ({ committee }) => {
   );
 };
 
-const TeamPage = () => (
-  <PageRoot>
-    <Head>
-      <title>Team | MXESA 2026-27</title>
-      <meta
-        name="description"
-        content="Meet the founding committee of the Mechatronics Engineering Student's Association (MXESA) at MMIT Pune."
-      />
-      <meta name="theme-color" content="#1a1a1a" />
-    </Head>
+const TeamPage = () => {
+  const [committeeData, setCommitteeData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    <Header standalone />
+  useEffect(() => {
+    const fetchTeam = async () => {
+      try {
+        const API_BASE = process.env.NEXT_PUBLIC_SDG_API_BASE_URL || 'http://localhost:5000';
+        const res = await fetch(`${API_BASE}/api/mxesa_team`);
+        if (res.ok) {
+          const data = await res.json();
+          const members = data.members || [];
+          
+          const grouped = [];
+          const roleMap = {};
+          
+          members.forEach(member => {
+            const role = member.role || 'Member';
+            if (!roleMap[role]) {
+              const newGroup = {
+                id: role.toLowerCase().replace(/\s+/g, '-'),
+                role: role,
+                featured: member.order < 20,
+                head: member,
+                members: []
+              };
+              roleMap[role] = newGroup;
+              grouped.push(newGroup);
+            } else {
+              roleMap[role].members.push(member);
+            }
+          });
+          
+          setCommitteeData(grouped);
+        }
+      } catch (err) {
+        console.error('Error fetching team:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTeam();
+  }, []);
 
-    <main id="main">
-      {/* Page Hero */}
-      <PageHero>
-        <Eyebrow>Est. 2026 · MXESA Founding Committee</Eyebrow>
-        <PageTitle>
-          <span>The People</span>
-          <em>Behind MXESA.</em>
-        </PageTitle>
-        <PageSubtitle>
-          Meet the founding committee of the Mechatronics Engineering
-          Student&apos;s Association — the team driving innovation at MMIT,
-          Lohagaon, Pune.
-        </PageSubtitle>
-      </PageHero>
+  return (
+    <PageRoot>
+      <Head>
+        <title>Team | MXESA 2026-27</title>
+        <meta
+          name="description"
+          content="Meet the founding committee of the Mechatronics Engineering Student's Association (MXESA) at MMIT Pune."
+        />
+        <meta name="theme-color" content="#1a1a1a" />
+      </Head>
 
-      {/* Faculty Section */}
-      <FacultySection>
-        <SectionInner>
-          <BackLink href="/">← Back to Home</BackLink>
-          <SectionLabel>Faculty Guidance</SectionLabel>
-          <SectionTitle>
-            Under the <em>Guidance of.</em>
-          </SectionTitle>
-          <FacultyGrid>
-            {FACULTY.map((f) => (
-              <FacultyCard key={f.id}>
-                <FacultyAvatar>{getInitials(f.name)}</FacultyAvatar>
-                <FacultyInfo>
-                  <FacultyRole>{f.role}</FacultyRole>
-                  <FacultyName>{f.name}</FacultyName>
-                </FacultyInfo>
-              </FacultyCard>
-            ))}
-          </FacultyGrid>
-        </SectionInner>
-      </FacultySection>
+      <Header standalone />
 
-      {/* All Members */}
-      <MembersSection>
-        <SectionInner>
-          <SectionLabel>Student Committee</SectionLabel>
-          <SectionTitle>
-            The Founding <em>Committee.</em>
-          </SectionTitle>
-          <MembersGrid>
-            {COMMITTEE.map((c) => (
-              <FlipCard key={c.id} committee={c} />
-            ))}
-          </MembersGrid>
-        </SectionInner>
-      </MembersSection>
-    </main>
-  </PageRoot>
-);
+      <main id="main">
+        {/* Page Hero */}
+        <PageHero>
+          <Eyebrow>Est. 2026 · MXESA Founding Committee</Eyebrow>
+          <PageTitle>
+            <span>The People</span>
+            <em>Behind MXESA.</em>
+          </PageTitle>
+          <PageSubtitle>
+            Meet the founding committee of the Mechatronics Engineering
+            Student&apos;s Association — the team driving innovation at MMIT,
+            Lohagaon, Pune.
+          </PageSubtitle>
+        </PageHero>
+
+        {/* Faculty Section */}
+        <FacultySection>
+          <SectionInner>
+            <BackLink href="/">← Back to Home</BackLink>
+            <SectionLabel>Faculty Guidance</SectionLabel>
+            <SectionTitle>
+              Under the <em>Guidance of.</em>
+            </SectionTitle>
+            <FacultyGrid>
+              {FACULTY.map((f) => (
+                <FacultyCard key={f.id}>
+                  <FacultyAvatar>{getInitials(f.name)}</FacultyAvatar>
+                  <FacultyInfo>
+                    <FacultyRole>{f.role}</FacultyRole>
+                    <FacultyName>{f.name}</FacultyName>
+                  </FacultyInfo>
+                </FacultyCard>
+              ))}
+            </FacultyGrid>
+          </SectionInner>
+        </FacultySection>
+
+        {/* All Members */}
+        <MembersSection>
+          <SectionInner>
+            <SectionLabel>Student Committee</SectionLabel>
+            <SectionTitle>
+              The Founding <em>Committee.</em>
+            </SectionTitle>
+            <MembersGrid>
+              {loading ? (
+                <p style={{ color: colors.white, gridColumn: '1 / -1', textAlign: 'center' }}>Loading team members...</p>
+              ) : committeeData.length === 0 ? (
+                <p style={{ color: colors.white, gridColumn: '1 / -1', textAlign: 'center' }}>No team members added yet. Add them in the Admin Panel!</p>
+              ) : (
+                committeeData.map((c) => (
+                  <FlipCard key={c.id} committee={c} />
+                ))
+              )}
+            </MembersGrid>
+          </SectionInner>
+        </MembersSection>
+      </main>
+    </PageRoot>
+  );
+};
 
 export default TeamPage;
