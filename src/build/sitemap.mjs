@@ -4,7 +4,7 @@ import { Readable } from 'stream';
 
 import { routeIsClosed } from '../data/closedRoutes.mjs';
 
-const BASE_URL = (process.env.BASE_URL || '').replace(/\/*$/, '');
+const BASE_URL = (process.env.BASE_URL || 'https://mxesa.in').replace(/\/*$/, '');
 
 /* Every public page, in one place. The sitemap is generated from this
    list, and so is the post-deploy cache heal (src/build/post/cache.mjs):

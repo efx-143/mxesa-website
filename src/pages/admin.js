@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import styled from 'styled-components';
 import Header from 'components/Header';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { db } from 'lib/firebase';
 import { colors, fonts } from 'styles/tokens';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
-import { db } from '../lib/firebase';
 const PageRoot = styled.div`
   min-height: 100vh;
   background: ${colors.paper};
@@ -205,12 +205,8 @@ export default function Admin() {
 
   const fetchMxesaTeam = async () => {
     try {
-      const q = query(collection(db, 'mxesa_team'), orderBy('order'));
-      const querySnapshot = await getDocs(q);
-      const members = [];
-      querySnapshot.forEach((doc) => {
-        members.push({ id: doc.id, ...doc.data() });
-      });
+      const querySnapshot = await getDocs(collection(db, 'mxesa_team'));
+      const members = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setMxesaTeam(members);
     } catch (err) {
       console.error('Error fetching MXESA team:', err);
@@ -249,16 +245,18 @@ export default function Admin() {
 
   const handleSaveMember = async (e) => {
     e.preventDefault();
+    const isNew = !memberForm.id;
+
     try {
-      const memberData = { ...memberForm };
-      delete memberData.id;
-      
-      if (memberForm.id) {
-        await updateDoc(doc(db, 'mxesa_team', memberForm.id), memberData);
-        alert('Member updated!');
-      } else {
-        await addDoc(collection(db, 'mxesa_team'), memberData);
+      const dataToSave = { ...memberForm };
+      delete dataToSave.id; // Don't save the id inside the document
+
+      if (isNew) {
+        await addDoc(collection(db, 'mxesa_team'), dataToSave);
         alert('Member added!');
+      } else {
+        await updateDoc(doc(db, 'mxesa_team', memberForm.id), dataToSave);
+        alert('Member updated!');
       }
       resetMemberForm();
       fetchMxesaTeam();

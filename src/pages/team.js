@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
-import { db } from '../lib/firebase';
 import Link from 'next/link';
 import styled from 'styled-components';
-
 import Header from 'components/Header';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from 'lib/firebase';
 import { breakpoints, colors, fonts } from 'styles/tokens';
 
 // --- Icons ---
@@ -764,34 +763,31 @@ const TeamPage = () => {
   useEffect(() => {
     const fetchTeam = async () => {
       try {
-        const q = query(collection(db, 'mxesa_team'), orderBy('order'));
-        const querySnapshot = await getDocs(q);
-        const members = [];
-        querySnapshot.forEach((doc) => {
-          members.push({ id: doc.id, ...doc.data() });
-        });
-        
-        const grouped = [];
-        const roleMap = {};
-        
-        members.forEach(member => {
-          const role = member.role || 'Member';
-          if (!roleMap[role]) {
-            const newGroup = {
-              id: role.toLowerCase().replace(/\s+/g, '-'),
-              role: role,
-              featured: member.order < 20,
-              head: member,
-              members: []
-            };
-            roleMap[role] = newGroup;
-            grouped.push(newGroup);
-          } else {
-            roleMap[role].members.push(member);
-          }
-        });
-        
-        setCommitteeData(grouped);
+        const querySnapshot = await getDocs(collection(db, 'mxesa_team'));
+        const members = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Sort by order
+        members.sort((a, b) => (a.order || 0) - (b.order || 0));       
+          const grouped = [];
+          const roleMap = {};
+          
+          members.forEach(member => {
+            const role = member.role || 'Member';
+            if (!roleMap[role]) {
+              const newGroup = {
+                id: role.toLowerCase().replace(/\s+/g, '-'),
+                role: role,
+                featured: member.order < 20,
+                head: member,
+                members: []
+              };
+              roleMap[role] = newGroup;
+              grouped.push(newGroup);
+            } else {
+              roleMap[role].members.push(member);
+            }
+          });
+          
+          setCommitteeData(grouped);
       } catch (err) {
         console.error('Error fetching team:', err);
       } finally {
