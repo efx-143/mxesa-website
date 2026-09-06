@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import Link from 'next/link';
 import styled from 'styled-components';
 
@@ -762,34 +764,34 @@ const TeamPage = () => {
   useEffect(() => {
     const fetchTeam = async () => {
       try {
-        const API_BASE = process.env.NEXT_PUBLIC_SDG_API_BASE_URL || 'http://localhost:5000';
-        const res = await fetch(`${API_BASE}/api/mxesa_team`);
-        if (res.ok) {
-          const data = await res.json();
-          const members = data.members || [];
-          
-          const grouped = [];
-          const roleMap = {};
-          
-          members.forEach(member => {
-            const role = member.role || 'Member';
-            if (!roleMap[role]) {
-              const newGroup = {
-                id: role.toLowerCase().replace(/\s+/g, '-'),
-                role: role,
-                featured: member.order < 20,
-                head: member,
-                members: []
-              };
-              roleMap[role] = newGroup;
-              grouped.push(newGroup);
-            } else {
-              roleMap[role].members.push(member);
-            }
-          });
-          
-          setCommitteeData(grouped);
-        }
+        const q = query(collection(db, 'mxesa_team'), orderBy('order'));
+        const querySnapshot = await getDocs(q);
+        const members = [];
+        querySnapshot.forEach((doc) => {
+          members.push({ id: doc.id, ...doc.data() });
+        });
+        
+        const grouped = [];
+        const roleMap = {};
+        
+        members.forEach(member => {
+          const role = member.role || 'Member';
+          if (!roleMap[role]) {
+            const newGroup = {
+              id: role.toLowerCase().replace(/\s+/g, '-'),
+              role: role,
+              featured: member.order < 20,
+              head: member,
+              members: []
+            };
+            roleMap[role] = newGroup;
+            grouped.push(newGroup);
+          } else {
+            roleMap[role].members.push(member);
+          }
+        });
+        
+        setCommitteeData(grouped);
       } catch (err) {
         console.error('Error fetching team:', err);
       } finally {

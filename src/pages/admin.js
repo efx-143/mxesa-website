@@ -3,7 +3,8 @@ import Head from 'next/head';
 import styled from 'styled-components';
 import Header from 'components/Header';
 import { colors, fonts } from 'styles/tokens';
-
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 const PageRoot = styled.div`
   min-height: 100vh;
   background: ${colors.paper};
@@ -204,11 +205,13 @@ export default function Admin() {
 
   const fetchMxesaTeam = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/mxesa_team`);
-      if (res.ok) {
-        const data = await res.json();
-        setMxesaTeam(data.members);
-      }
+      const q = query(collection(db, 'mxesa_team'), orderBy('order'));
+      const querySnapshot = await getDocs(q);
+      const members = [];
+      querySnapshot.forEach((doc) => {
+        members.push({ id: doc.id, ...doc.data() });
+      });
+      setMxesaTeam(members);
     } catch (err) {
       console.error('Error fetching MXESA team:', err);
     }
@@ -246,49 +249,34 @@ export default function Admin() {
 
   const handleSaveMember = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('admin_token');
-    const isNew = !memberForm.id;
-    const url = isNew ? `${API_BASE}/api/admin/mxesa_team` : `${API_BASE}/api/admin/mxesa_team/${memberForm.id}`;
-    const method = isNew ? 'POST' : 'PUT';
-
     try {
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Admin ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(memberForm)
-      });
-      if (res.ok) {
-        alert(isNew ? 'Member added!' : 'Member updated!');
-        resetMemberForm();
-        fetchMxesaTeam();
+      const memberData = { ...memberForm };
+      delete memberData.id;
+      
+      if (memberForm.id) {
+        await updateDoc(doc(db, 'mxesa_team', memberForm.id), memberData);
+        alert('Member updated!');
       } else {
-        alert('Error saving member');
+        await addDoc(collection(db, 'mxesa_team'), memberData);
+        alert('Member added!');
       }
+      resetMemberForm();
+      fetchMxesaTeam();
     } catch (err) {
       console.error(err);
-      alert('Network error');
+      alert('Error saving member');
     }
   };
 
   const handleDeleteMember = async (id) => {
     if (!window.confirm('Are you sure you want to delete this member?')) return;
-    const token = localStorage.getItem('admin_token');
     try {
-      const res = await fetch(`${API_BASE}/api/admin/mxesa_team/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Admin ${token}` }
-      });
-      if (res.ok) {
-        alert('Member deleted!');
-        fetchMxesaTeam();
-      } else {
-        alert('Error deleting member');
-      }
+      await deleteDoc(doc(db, 'mxesa_team', id));
+      alert('Member deleted!');
+      fetchMxesaTeam();
     } catch (err) {
       console.error(err);
+      alert('Error deleting member');
     }
   };
 
