@@ -77,7 +77,7 @@ export default function SdgJoin() {
   const [status, setStatus] = useState('Checking auth...');
 
   const API_BASE =
-    process.env.NEXT_PUBLIC_SDG_API_BASE_URL || 'http://localhost:5000';
+    process.env.NEXT_PUBLIC_SDG_API_BASE_URL || '';
 
   useEffect(() => {
     if (!router.isReady) return;

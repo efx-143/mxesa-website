@@ -152,7 +152,7 @@ export default function SdgDashboard() {
   const [submitting, setSubmitting] = useState(false);
 
   const API_BASE =
-    process.env.NEXT_PUBLIC_SDG_API_BASE_URL || 'http://localhost:5000';
+    process.env.NEXT_PUBLIC_SDG_API_BASE_URL || '';
 
   useEffect(() => {
     const unsubscribe = onAuthStateChange(async (firebaseUser) => {

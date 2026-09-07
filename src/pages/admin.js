@@ -150,7 +150,7 @@ export default function Admin() {
     socials: { instagram: '', linkedin: '', github: '' }
   });
 
-  const API_BASE = process.env.NEXT_PUBLIC_SDG_API_BASE_URL || 'http://localhost:5000';
+  const API_BASE = process.env.NEXT_PUBLIC_SDG_API_BASE_URL || '';
 
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
