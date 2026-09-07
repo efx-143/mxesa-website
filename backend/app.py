@@ -15,11 +15,19 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
+import json
+
 # Initialize Firebase Admin
-# It will use GOOGLE_APPLICATION_CREDENTIALS env var or default credentials if none provided.
-# Ensure you set GOOGLE_APPLICATION_CREDENTIALS pointing to the service account JSON file.
+# It will use FIREBASE_CREDENTIALS env var containing the JSON string,
+# or default credentials if none provided (like GOOGLE_APPLICATION_CREDENTIALS for local).
 try:
-    firebase_admin.initialize_app()
+    firebase_credentials = os.environ.get('FIREBASE_CREDENTIALS')
+    if firebase_credentials:
+        cert_dict = json.loads(firebase_credentials, strict=False)
+        cred = credentials.Certificate(cert_dict)
+        firebase_admin.initialize_app(cred)
+    else:
+        firebase_admin.initialize_app()
     db = firestore.client()
 except Exception as e:
     print("Warning: Firebase admin not initialized correctly:", e)
