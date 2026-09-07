@@ -385,5 +385,13 @@ def delete_mxesa_member(member_id):
         print("Error deleting member:", e)
         return jsonify({'error': 'Internal server error'}), 500
 
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'])
+def catch_all(path):
+    return jsonify({
+        'error': f'404 Not Found (Catch-All). Path received: /{path}',
+        'request_path': request.path
+    }), 404
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
