@@ -19,9 +19,9 @@ CORS(app)
 def handle_exception(e):
     # Pass through HTTP errors
     if hasattr(e, 'code'):
-        return jsonify(error=str(e)), e.code
+        return jsonify(error=f"{str(e)} (Path seen by Flask: {request.path})"), e.code
     # Return JSON instead of HTML for non-HTTP errors
-    return jsonify(error=str(e), type=type(e).__name__), 500
+    return jsonify(error=f"{str(e)} (Path seen by Flask: {request.path})", type=type(e).__name__), 500
 
 @app.errorhandler(404)
 def not_found(e):
