@@ -23,6 +23,16 @@ def handle_exception(e):
     # Return JSON instead of HTML for non-HTTP errors
     return jsonify(error=str(e), type=type(e).__name__), 500
 
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({
+        'error': '404 Not Found',
+        'path': request.path,
+        'full_path': request.full_path,
+        'script_root': request.script_root,
+        'base_url': request.base_url
+    }), 404
+
 import json
 
 # Initialize Firebase Admin
