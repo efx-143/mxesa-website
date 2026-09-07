@@ -15,6 +15,14 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
+@app.errorhandler(Exception)
+def handle_exception(e):
+    # Pass through HTTP errors
+    if hasattr(e, 'code'):
+        return jsonify(error=str(e)), e.code
+    # Return JSON instead of HTML for non-HTTP errors
+    return jsonify(error=str(e), type=type(e).__name__), 500
+
 import json
 
 # Initialize Firebase Admin
@@ -272,6 +280,15 @@ def get_all_teams():
     except Exception as e:
         print("Error fetching teams for admin:", e)
         return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    return jsonify({
+        'status': 'ok',
+        'firebase_initialized': db is not None,
+        'has_credentials_env': bool(os.environ.get('FIREBASE_CREDENTIALS')),
+        'frontend_url': FRONTEND_URL
+    }), 200
 
 # --- MXESA Team API ---
 
