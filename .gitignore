@@ -16,3 +16,5 @@ backend/service-account.json
 .env.local
 __pycache__/
 backend/venv/
+
+backend/service-account.txt

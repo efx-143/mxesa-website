@@ -417,9 +417,17 @@ export default function SdgDashboard() {
             <Card>
               <CardTitle>Phase 1 Submission</CardTitle>
               {team.submission?.idea_title ? (
-                <div style={{ background: '#d4edda', padding: '16px', border: '2px solid #c3e6cb', marginBottom: '20px', color: '#155724' }}>
-                  <strong>✅ Submission Received!</strong> Your idea has been successfully submitted and is locked for review.
-                </div>
+                <>
+                  <div style={{ background: '#d4edda', padding: '16px', border: '2px solid #c3e6cb', marginBottom: '16px', color: '#155724' }}>
+                    <strong>✅ Submission Received!</strong> Your idea has been successfully submitted and is locked for review.
+                  </div>
+                  <div style={{ background: '#e8f4fd', padding: '16px', border: '2px solid #b8daff', marginBottom: '20px', color: '#004085' }}>
+                    <strong>Next Steps:</strong> Join our WhatsApp group for further updates.{' '}
+                    <a href="https://chat.whatsapp.com/EdV7GzXwuD56bSK2JhnFq4?s=cl&p=a&mlu=4&ilr=4" target="_blank" rel="noreferrer" style={{ textDecoration: 'underline', fontWeight: 'bold' }}>
+                      Join Here
+                    </a>
+                  </div>
+                </>
               ) : null}
 
               {user.uid === team.leader_uid && !team.submission?.idea_title ? (
