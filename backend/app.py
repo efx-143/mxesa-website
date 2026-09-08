@@ -331,6 +331,19 @@ def get_all_teams():
         print("Error fetching teams for admin:", e)
         return jsonify({'error': 'Internal server error'}), 500
 
+@app.route('/api/sdg/admin/teams/<team_id>', methods=['DELETE'])
+def delete_sdg_team(team_id):
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or auth_header != 'Admin mxesa_admin_authorized':
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        db.collection('sdg_teams').document(team_id).delete()
+        return jsonify({'message': 'Team deleted successfully'}), 200
+    except Exception as e:
+        print("Error deleting team:", e)
+        return jsonify({'error': 'Internal server error'}), 500
+
 @app.route('/api/health', methods=['GET'])
 def health_check():
     return jsonify({

@@ -283,6 +283,55 @@ export default function Admin() {
     }
   };
 
+  const downloadCSV = () => {
+    const headers = ['Team Name', 'Leader Name', 'Leader Email', 'Members', 'SDG Track', 'Idea Title', 'Phase 1 Description', 'Video Link'];
+    const rows = sdgTeams.map(team => {
+      const leader = team.members?.find(m => m.uid === team.leader_uid) || {};
+      const membersStr = team.members?.map(m => `${m.name} (${m.email})`).join('; ') || '';
+      return [
+        `"${(team.name || '').replace(/"/g, '""')}"`,
+        `"${(leader.name || '').replace(/"/g, '""')}"`,
+        `"${(leader.email || '').replace(/"/g, '""')}"`,
+        `"${membersStr.replace(/"/g, '""')}"`,
+        `"${(team.sdg_track || '').replace(/"/g, '""')}"`,
+        `"${(team.submission?.idea_title || '').replace(/"/g, '""')}"`,
+        `"${(team.submission?.phase1_description || '').replace(/"/g, '""')}"`,
+        `"${(team.submission?.demo_video_link || '').replace(/"/g, '""')}"`
+      ].join(',');
+    });
+    
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "sdg_teams.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDeleteSdgTeam = async (id, e) => {
+    e.stopPropagation();
+    if (!window.confirm('Are you sure you want to delete this SDG team?')) return;
+    try {
+      const token = localStorage.getItem('admin_token');
+      const res = await fetch(`${API_BASE}/api/sdg/admin/teams/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Admin ${token}` }
+      });
+      if (res.ok) {
+        alert('Team deleted!');
+        fetchSdgTeams(token);
+      } else {
+        alert('Failed to delete team');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error deleting team');
+    }
+  };
+
   if (!isLoggedIn) {
     return (
       <PageRoot>
@@ -334,7 +383,10 @@ export default function Admin() {
         
         {activeTab === 'sdg' && (
           <Card>
-            <h2>SDG Ideathon Teams</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0 }}>SDG Ideathon Teams</h2>
+              <Button onClick={downloadCSV}>Download CSV</Button>
+            </div>
             {loading ? (
               <p>Loading teams...</p>
             ) : sdgTeams.length === 0 ? (
@@ -348,6 +400,7 @@ export default function Admin() {
                       <th>Heads</th>
                       <th>Idea</th>
                       <th>Video Link</th>
+                      <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -366,10 +419,15 @@ export default function Admin() {
                               </a>
                             ) : '-'}
                           </td>
+                          <td>
+                            <button onClick={(e) => handleDeleteSdgTeam(team.id, e)} style={{ color: 'red', cursor: 'pointer', background: 'none', border: 'none', textDecoration: 'underline' }}>
+                              Delete
+                            </button>
+                          </td>
                         </tr>
                         {expandedRow === team.id && (
                           <tr style={{ background: colors.paper }}>
-                            <td colSpan="4">
+                            <td colSpan="5">
                               <div style={{ padding: '12px' }}>
                                 <strong>Members:</strong>
                                 <ul>
