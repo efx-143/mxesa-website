@@ -143,7 +143,8 @@ export default function SdgDashboard() {
   // Form states
   const [teamName, setTeamName] = useState('');
   const [sdgTrack, setSdgTrack] = useState(SDGs[0]);
-  const [inviteEmail, setInviteEmail] = useState('');
+  const [addMemberName, setAddMemberName] = useState('');
+  const [addMemberEmail, setAddMemberEmail] = useState('');
 
   // Submission states
   const [ideaTitle, setIdeaTitle] = useState('');
@@ -223,26 +224,28 @@ export default function SdgDashboard() {
     }
   };
 
-  const handleInvite = async (e) => {
+  const handleAddMember = async (e) => {
     e.preventDefault();
-    if (!inviteEmail) return;
+    if (!addMemberName || !addMemberEmail) return;
     try {
       const token = await user.getIdToken();
-      const res = await fetch(`${API_BASE}/api/sdg/teams/${team.id}/invite`, {
+      const res = await fetch(`${API_BASE}/api/sdg/teams/${team.id}/add_member`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email: inviteEmail }),
+        body: JSON.stringify({ name: addMemberName, email: addMemberEmail }),
       });
 
       if (res.ok) {
-        alert('Invitation sent!');
-        setInviteEmail('');
+        alert('Member added successfully!');
+        setAddMemberName('');
+        setAddMemberEmail('');
+        await fetchTeamData(user);
       } else {
         const err = await res.json();
-        alert(err.error || 'Failed to send invite');
+        alert(err.error || 'Failed to add member');
       }
     } catch (err) {
       alert('Network error');
@@ -372,25 +375,41 @@ export default function SdgDashboard() {
                   <h3
                     style={{ fontFamily: fonts.display, marginBottom: '12px' }}
                   >
-                    Invite Members
+                    Add Members
                   </h3>
-                  <form onSubmit={handleInvite}>
-                    <ActionRow>
-                      <input
-                        type="email"
-                        value={inviteEmail}
-                        onChange={(e) => setInviteEmail(e.target.value)}
-                        placeholder="Member's email"
-                        required
-                        style={{
-                          padding: '12px',
-                          border: `2px solid ${colors.ink}`,
-                          flex: 1,
-                        }}
-                      />
-                      <Button type="submit">Send Invite</Button>
-                    </ActionRow>
-                  </form>
+                  {team.members.length >= 4 ? (
+                    <p style={{ color: colors.muted }}>Your team is full (4 members max).</p>
+                  ) : (
+                    <form onSubmit={handleAddMember}>
+                      <ActionRow style={{ marginBottom: '12px' }}>
+                        <input
+                          type="text"
+                          value={addMemberName}
+                          onChange={(e) => setAddMemberName(e.target.value)}
+                          placeholder="Member's name"
+                          required
+                          style={{
+                            padding: '12px',
+                            border: `2px solid ${colors.ink}`,
+                            flex: 1,
+                          }}
+                        />
+                        <input
+                          type="email"
+                          value={addMemberEmail}
+                          onChange={(e) => setAddMemberEmail(e.target.value)}
+                          placeholder="Member's email"
+                          required
+                          style={{
+                            padding: '12px',
+                            border: `2px solid ${colors.ink}`,
+                            flex: 1,
+                          }}
+                        />
+                      </ActionRow>
+                      <Button type="submit">Add Member</Button>
+                    </form>
+                  )}
                 </div>
               )}
             </Card>

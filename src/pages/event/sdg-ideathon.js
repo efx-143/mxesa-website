@@ -271,7 +271,7 @@ export default function SdgIdeathon() {
                     2026 (11:59 PM IST)
                   </li>
                   <li>
-                    <strong>Top 10 Announcement:</strong> September 15, 2026
+                    <strong>Top 10 Team Presentation:</strong> September 15, 2026
                   </li>
                   <li>
                     <strong>Finale & Pitch:</strong> September 25, 2026
@@ -288,8 +288,7 @@ export default function SdgIdeathon() {
                     <strong>Eligibility:</strong> Open to all students.
                   </li>
                   <li>
-                    <strong>Phase 1:</strong> Submit a detailed idea and a short
-                    video explanation.
+                    <strong>Phase 1:</strong> Phase 1 submission includes Team Creation and Video Submission as per rules till 10th September.
                   </li>
                   <li>
                     <strong>Phase 2 (Top 10):</strong> The best 10 ideas proceed

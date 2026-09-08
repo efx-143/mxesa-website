@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import styled from 'styled-components';
 import Header from 'components/Header';
@@ -136,6 +136,11 @@ export default function Admin() {
 
   // SDG State
   const [sdgTeams, setSdgTeams] = useState([]);
+  const [expandedRow, setExpandedRow] = useState(null);
+
+  const toggleExpandedRow = (id) => {
+    setExpandedRow(expandedRow === id ? null : id);
+  };
 
   // MXESA Team State
   const [mxesaTeam, setMxesaTeam] = useState([]);
@@ -339,32 +344,48 @@ export default function Admin() {
                 <Table>
                   <thead>
                     <tr>
-                      <th>Team Name</th>
-                      <th>Track</th>
-                      <th>Members</th>
-                      <th>Idea Title</th>
-                      <th>Phase 1 Description</th>
-                      <th>Demo Video</th>
+                      <th>Team</th>
+                      <th>Heads</th>
+                      <th>Idea</th>
+                      <th>Video Link</th>
                     </tr>
                   </thead>
                   <tbody>
                     {sdgTeams.map(team => (
-                      <tr key={team.id}>
-                        <td>{team.name}</td>
-                        <td>{team.sdg_track}</td>
-                        <td>
-                          {team.members?.map(m => m.name || m.email).join(', ')}
-                        </td>
-                        <td>{team.submission?.idea_title || '-'}</td>
-                        <td>{team.submission?.phase1_description || '-'}</td>
-                        <td>
-                          {team.submission?.demo_video_link ? (
-                            <a href={team.submission.demo_video_link} target="_blank" rel="noreferrer" style={{ color: colors.orange, textDecoration: 'underline' }}>
-                              Watch Link
-                            </a>
-                          ) : '-'}
-                        </td>
-                      </tr>
+                      <React.Fragment key={team.id}>
+                        <tr onClick={() => toggleExpandedRow(team.id)} style={{ cursor: 'pointer' }}>
+                          <td>{team.name}</td>
+                          <td>
+                            {team.members?.find(m => m.uid === team.leader_uid)?.name || 'Leader'}
+                          </td>
+                          <td>{team.submission?.idea_title || '-'}</td>
+                          <td>
+                            {team.submission?.demo_video_link ? (
+                              <a href={team.submission.demo_video_link} target="_blank" rel="noreferrer" style={{ color: colors.orange, textDecoration: 'underline' }} onClick={(e) => e.stopPropagation()}>
+                                Watch Link
+                              </a>
+                            ) : '-'}
+                          </td>
+                        </tr>
+                        {expandedRow === team.id && (
+                          <tr style={{ background: colors.paper }}>
+                            <td colSpan="4">
+                              <div style={{ padding: '12px' }}>
+                                <strong>Members:</strong>
+                                <ul>
+                                  {team.members?.map((m, idx) => (
+                                    <li key={idx}>{m.name} ({m.email}) {m.uid === team.leader_uid ? '[Leader]' : ''}</li>
+                                  ))}
+                                </ul>
+                                <p style={{ marginTop: '8px', fontSize: '0.9rem', color: colors.muted }}>
+                                  Track: {team.sdg_track} <br/>
+                                  Phase 1 Desc: {team.submission?.phase1_description || '-'}
+                                </p>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
                     ))}
                   </tbody>
                 </Table>

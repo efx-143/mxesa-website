@@ -183,6 +183,15 @@ export default function SdgLogin() {
   const [formError, setFormError] = useState('');
   const [formMessage, setFormMessage] = useState('');
 
+  // Password Reset Flow
+  const [resetFlow, setResetFlow] = useState(false);
+  const [resetStep, setResetStep] = useState(1);
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+
+  // API BASE URL
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:5000';
+
   useEffect(() => {
     const unsubscribe = onAuthStateChange((user) => {
       if (user) {
@@ -214,7 +223,8 @@ export default function SdgLogin() {
     }
   };
 
-  const handleForgotPassword = async () => {
+  const handleForgotPassword = async (e) => {
+    if (e) e.preventDefault();
     setFormError('');
     setFormMessage('');
     if (!email) {
@@ -223,14 +233,57 @@ export default function SdgLogin() {
     }
     setLoading(true);
     try {
-      await resetPassword(email);
-      setFormMessage('Password reset email sent. Please check your inbox.');
-    } catch (error) {
-      let errorMsg = error.message || 'Unknown error';
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-email') {
-        errorMsg = 'No account found with this email.';
+      const res = await fetch(`${API_BASE}/api/sdg/auth/forgot_password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setFormMessage('OTP sent. Please check your email.');
+        setResetStep(2);
+      } else {
+        setFormError(data.error || 'Failed to send OTP');
       }
-      setFormError('Failed to send reset email: ' + errorMsg);
+    } catch (error) {
+      setFormError('Network error while sending OTP');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setFormError('');
+    setFormMessage('');
+    if (!otp || !newPassword) {
+      setFormError('Please enter the OTP and a new password.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/sdg/auth/reset_password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, code: otp, new_password: newPassword }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setFormMessage('Password reset successfully! You can now log in.');
+        setResetFlow(false);
+        setResetStep(1);
+        setOtp('');
+        setNewPassword('');
+        setPassword('');
+      } else {
+        setFormError(data.error || 'Failed to reset password');
+      }
+    } catch (error) {
+      setFormError('Network error while resetting password');
     } finally {
       setLoading(false);
     }
@@ -286,58 +339,109 @@ export default function SdgLogin() {
           {formError && <ErrorMessage>{formError}</ErrorMessage>}
           {formMessage && <SuccessMessage>{formMessage}</SuccessMessage>}
 
-          <Form onSubmit={handleEmailAuth}>
-            <Input
-              type="email"
-              placeholder="Email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-              required
-            />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-              required
-            />
-            <Button type="submit" $primary disabled={loading}>
-              {loading
-                ? isSignUp
-                  ? 'Signing up...'
-                  : 'Signing in...'
-                : isSignUp
-                  ? 'Sign Up'
-                  : 'Sign In'}
-            </Button>
-            
-            {!isSignUp && (
-              <div style={{ textAlign: 'right', marginTop: '-8px' }}>
+          {resetFlow ? (
+            <Form onSubmit={resetStep === 1 ? handleForgotPassword : handleResetPassword}>
+              <Input
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading || resetStep === 2}
+                required
+              />
+              {resetStep === 2 && (
+                <>
+                  <Input
+                    type="text"
+                    placeholder="Enter 6-digit OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    disabled={loading}
+                    required
+                  />
+                  <Input
+                    type="password"
+                    placeholder="New Password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    disabled={loading}
+                    required
+                  />
+                </>
+              )}
+              <Button type="submit" $primary disabled={loading}>
+                {loading
+                  ? 'Please wait...'
+                  : resetStep === 1
+                    ? 'Send OTP'
+                    : 'Reset Password'}
+              </Button>
+              <div style={{ textAlign: 'center', marginTop: '8px' }}>
                 <a 
                   href="#" 
-                  onClick={(e) => { e.preventDefault(); handleForgotPassword(); }}
-                  style={{ color: colors.muted, fontSize: '0.85rem', textDecoration: 'underline' }}
+                  onClick={(e) => { e.preventDefault(); setResetFlow(false); setResetStep(1); }}
+                  style={{ color: colors.muted, fontSize: '0.9rem', textDecoration: 'underline' }}
                 >
-                  Forgot password?
+                  Back to Login
                 </a>
               </div>
-            )}
-          </Form>
+            </Form>
+          ) : (
+            <>
+              <Form onSubmit={handleEmailAuth}>
+                <Input
+                  type="email"
+                  placeholder="Email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  required
+                />
+                <Input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  required
+                />
+                <Button type="submit" $primary disabled={loading}>
+                  {loading
+                    ? isSignUp
+                      ? 'Signing up...'
+                      : 'Signing in...'
+                    : isSignUp
+                      ? 'Sign Up'
+                      : 'Sign In'}
+                </Button>
+                
+                {!isSignUp && (
+                  <div style={{ textAlign: 'right', marginTop: '-8px' }}>
+                    <a 
+                      href="#" 
+                      onClick={(e) => { e.preventDefault(); setResetFlow(true); setResetStep(1); setFormError(''); setFormMessage(''); }}
+                      style={{ color: colors.muted, fontSize: '0.85rem', textDecoration: 'underline' }}
+                    >
+                      Forgot password?
+                    </a>
+                  </div>
+                )}
+              </Form>
 
-          <ToggleLink>
-            {isSignUp ? 'Already have an account? ' : 'Don’t have an account? '}
-            <a onClick={() => setIsSignUp(!isSignUp)}>
-              {isSignUp ? 'Sign in instead' : 'Sign up now'}
-            </a>
-          </ToggleLink>
+              <ToggleLink>
+                {isSignUp ? 'Already have an account? ' : 'Don’t have an account? '}
+                <a onClick={() => setIsSignUp(!isSignUp)}>
+                  {isSignUp ? 'Sign in instead' : 'Sign up now'}
+                </a>
+              </ToggleLink>
 
-          <Divider>OR</Divider>
+              <Divider>OR</Divider>
 
-          <Button type="button" onClick={handleGoogleLogin} disabled={loading}>
-            {loading ? 'Please wait...' : 'Continue with Google'}
-          </Button>
+              <Button type="button" onClick={handleGoogleLogin} disabled={loading}>
+                {loading ? 'Please wait...' : 'Continue with Google'}
+              </Button>
+            </>
+          )}
         </LoginCard>
       </MainContent>
     </PageRoot>

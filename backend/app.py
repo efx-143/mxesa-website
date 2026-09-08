@@ -20,7 +20,8 @@ CORS(app)
 def handle_exception(e):
     # Pass through HTTP errors
     if hasattr(e, 'code'):
-        return jsonify(error=f"{str(e)} (Path seen by Flask: {request.path})"), e.code
+        env_dump = {k: v for k, v in request.environ.items() if isinstance(v, (str, int))}
+        return jsonify(error=f"{str(e)} (Path received: {request.path})", env=env_dump), e.code
     # Return JSON instead of HTML for non-HTTP errors
     return jsonify(error=f"{str(e)} (Path seen by Flask: {request.path})", type=type(e).__name__), 500
 
@@ -160,8 +161,8 @@ Good luck!
         print("Failed to send email:", e)
         raise e
 
-@app.route('/api/sdg/teams/<team_id>/invite', methods=['POST'])
-def invite_member(team_id):
+@app.route('/api/sdg/teams/<team_id>/add_member', methods=['POST'])
+def add_member(team_id):
     user = verify_token(request)
     if not user:
         return jsonify({'error': 'Unauthorized'}), 401
@@ -175,77 +176,115 @@ def invite_member(team_id):
     team_data = team.to_dict()
     
     if team_data.get('leader_uid') != user['uid']:
-        return jsonify({'error': 'Only the leader can invite members'}), 403
+        return jsonify({'error': 'Only the leader can add members'}), 403
         
-    if len(team_data.get('members', [])) >= 3:
-        return jsonify({'error': 'Team is already full (max 3 members)'}), 400
+    if len(team_data.get('members', [])) >= 4:
+        return jsonify({'error': 'Team is already full (max 4 members)'}), 400
         
+    name = request.json.get('name')
+    email = request.json.get('email')
+    
+    if not name or not email:
+        return jsonify({'error': 'Name and Email are required'}), 400
+        
+    members = team_data.get('members', [])
+    members.append({
+        'uid': None,
+        'email': email,
+        'name': name
+    })
+    
+    team_ref.update({
+        'members': members
+    })
+    
+    return jsonify({'message': 'Member added successfully'}), 200
+
+import random
+
+@app.route('/api/sdg/auth/forgot_password', methods=['POST'])
+def forgot_password():
     email = request.json.get('email')
     if not email:
         return jsonify({'error': 'Email is required'}), 400
         
-    # Generate JWT token
-    exp = datetime.datetime.utcnow() + datetime.timedelta(days=7)
-    token = jwt.encode({'team_id': team_id, 'email': email, 'exp': exp}, JWT_SECRET, algorithm='HS256')
-    
-    invite_url = f"{FRONTEND_URL}/sdg-join?token={token}"
-    
     try:
-        send_email(email, invite_url, team_data.get('name'))
-        return jsonify({'message': 'Invitation sent'}), 200
+        user = auth.get_user_by_email(email)
     except Exception as e:
-        return jsonify({'error': 'Failed to send email'}), 500
-
-@app.route('/api/sdg/teams/join', methods=['POST'])
-def join_team():
-    user = verify_token(request)
-    if not user:
-        return jsonify({'error': 'Unauthorized'}), 401
+        return jsonify({'error': 'No account found with this email'}), 404
         
-    token = request.json.get('token')
-    if not token:
-        return jsonify({'error': 'Missing token'}), 400
+    otp = str(random.randint(100000, 999999))
+    expires_at = datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
+    
+    db.collection('password_resets').document(email).set({
+        'otp': otp,
+        'expires_at': expires_at
+    })
+    
+    body = f"""Hello,
+
+You requested a password reset. Your verification code is: {otp}
+
+This code will expire in 15 minutes.
+
+If you didn't request this, you can ignore this email.
+"""
+    try:
+        sender = os.environ.get('GMAIL_USER')
+        password = os.environ.get('GMAIL_PASS')
+        if sender and password:
+            msg = MIMEMultipart()
+            msg['From'] = sender
+            msg['To'] = email
+            msg['Subject'] = "Password Reset Code - SDG Ideathon"
+            msg.attach(MIMEText(body, 'plain'))
+            
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(sender, password)
+            server.sendmail(sender, email, msg.as_string())
+            server.quit()
+        else:
+            print("No email credentials configured. Code is:", otp)
+    except Exception as e:
+        print("Failed to send email:", e)
+        return jsonify({'error': 'Failed to send OTP email'}), 500
+        
+    return jsonify({'message': 'OTP sent successfully'}), 200
+
+@app.route('/api/sdg/auth/reset_password', methods=['POST'])
+def reset_password_with_otp():
+    email = request.json.get('email')
+    otp = request.json.get('code')
+    new_password = request.json.get('new_password')
+    
+    if not email or not otp or not new_password:
+        return jsonify({'error': 'Email, code, and new password are required'}), 400
+        
+    reset_doc = db.collection('password_resets').document(email).get()
+    
+    if not reset_doc.exists:
+        return jsonify({'error': 'No pending password reset found'}), 400
+        
+    reset_data = reset_doc.to_dict()
+    
+    expires_at = reset_data.get('expires_at')
+    if expires_at:
+        now = datetime.datetime.now(datetime.timezone.utc)
+        if now > expires_at:
+            return jsonify({'error': 'OTP has expired'}), 400
+            
+    if reset_data.get('otp') != otp:
+        return jsonify({'error': 'Invalid OTP code'}), 400
         
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
-        team_id = payload.get('team_id')
-    except jwt.ExpiredSignatureError:
-        return jsonify({'error': 'Invitation expired'}), 400
-    except jwt.InvalidTokenError:
-        return jsonify({'error': 'Invalid token'}), 400
-        
-    existing_team = get_user_team(user['uid'])
-    if existing_team:
-        return jsonify({'error': 'You are already in a team'}), 400
-        
-    team_ref = db.collection('sdg_teams').document(team_id)
-    team = team_ref.get()
-    
-    if not team.exists:
-        return jsonify({'error': 'Team not found'}), 404
-        
-    team_data = team.to_dict()
-    if len(team_data.get('members', [])) >= 3:
-        return jsonify({'error': 'Team is full'}), 400
-        
-    member_uids = team_data.get('member_uids', [])
-    if user['uid'] in member_uids:
-        return jsonify({'message': 'Already a member'}), 200
-        
-    member_uids.append(user['uid'])
-    members = team_data.get('members', [])
-    members.append({
-        'uid': user['uid'],
-        'email': user.get('email', ''),
-        'name': user.get('name', '')
-    })
-    
-    team_ref.update({
-        'member_uids': member_uids,
-        'members': members
-    })
-    
-    return jsonify({'message': 'Successfully joined the team'}), 200
+        user = auth.get_user_by_email(email)
+        auth.update_user(user.uid, password=new_password)
+        db.collection('password_resets').document(email).delete()
+        return jsonify({'message': 'Password reset successfully'}), 200
+    except Exception as e:
+        print("Error resetting password:", e)
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/sdg/teams/<team_id>/submission', methods=['POST'])
 def submit_idea(team_id):
