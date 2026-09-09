@@ -99,9 +99,10 @@ def create_team():
     data = request.json
     team_name = data.get('team_name')
     sdg_track = data.get('sdg_track')
+    leader_phone = data.get('leader_phone')
     
-    if not team_name or not sdg_track:
-        return jsonify({'error': 'Missing team_name or sdg_track'}), 400
+    if not team_name or not sdg_track or not leader_phone:
+        return jsonify({'error': 'Missing team_name, sdg_track, or leader_phone'}), 400
         
     existing_team = get_user_team(user['uid'])
     if existing_team:
@@ -111,11 +112,13 @@ def create_team():
         'name': team_name,
         'sdg_track': sdg_track,
         'leader_uid': user['uid'],
+        'leader_phone': leader_phone,
         'member_uids': [user['uid']],
         'members': [{
             'uid': user['uid'],
             'email': user.get('email', ''),
-            'name': user.get('name', '')
+            'name': user.get('name', ''),
+            'phone': leader_phone
         }],
         'submission': None,
         'created_at': firestore.SERVER_TIMESTAMP

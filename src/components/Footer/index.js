@@ -51,6 +51,9 @@ const Footer = () => (
       <FooterLink href="#">LinkedIn</FooterLink>
       <FooterLink href="#">Contact Us</FooterLink>
     </LinksContainer>
+    <div style={{ marginTop: '20px', fontSize: '12px' }}>
+      Designed and developed by <FooterLink href="https://povsanyam.me" target="_blank" rel="noopener noreferrer">SANYAM CHAVAN</FooterLink>
+    </div>
   </FooterRoot>
 );
 

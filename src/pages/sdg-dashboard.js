@@ -142,6 +142,7 @@ export default function SdgDashboard() {
 
   // Form states
   const [teamName, setTeamName] = useState('');
+  const [leaderPhone, setLeaderPhone] = useState('');
   const [sdgTrack, setSdgTrack] = useState(SDGs[0]);
   const [addMemberName, setAddMemberName] = useState('');
   const [addMemberEmail, setAddMemberEmail] = useState('');
@@ -151,6 +152,7 @@ export default function SdgDashboard() {
   const [phase1Description, setPhase1Description] = useState('');
   const [demoVideoLink, setDemoVideoLink] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [isEditingSubmission, setIsEditingSubmission] = useState(false);
 
   const API_BASE =
     process.env.NEXT_PUBLIC_SDG_API_BASE_URL || '';
@@ -183,6 +185,9 @@ export default function SdgDashboard() {
           setIdeaTitle(data.team.submission.idea_title || '');
           setPhase1Description(data.team.submission.phase1_description || '');
           setDemoVideoLink(data.team.submission.demo_video_link || '');
+          setIsEditingSubmission(false);
+        } else {
+          setIsEditingSubmission(true);
         }
       } else {
         console.error('Failed to fetch team data');
@@ -208,6 +213,7 @@ export default function SdgDashboard() {
         body: JSON.stringify({
           team_name: teamName,
           sdg_track: sdgTrack,
+          leader_phone: leaderPhone,
         }),
       });
 
@@ -275,6 +281,7 @@ export default function SdgDashboard() {
 
       if (res.ok) {
         alert('Submission saved successfully!');
+        setIsEditingSubmission(false);
         await fetchTeamData(user);
       } else {
         const err = await res.json();
@@ -346,6 +353,16 @@ export default function SdgDashboard() {
                     </option>
                   ))}
                 </select>
+              </FormGroup>
+              <FormGroup>
+                <label>Leader Phone Number</label>
+                <input
+                  type="tel"
+                  value={leaderPhone}
+                  onChange={(e) => setLeaderPhone(e.target.value)}
+                  required
+                  placeholder="e.g. +91 9876543210"
+                />
               </FormGroup>
               <Button type="submit">Create Team</Button>
             </form>
@@ -423,14 +440,14 @@ export default function SdgDashboard() {
                   </div>
                   <div style={{ background: '#e8f4fd', padding: '16px', border: '2px solid #b8daff', marginBottom: '20px', color: '#004085' }}>
                     <strong>Next Steps:</strong> Join our WhatsApp group for further updates.{' '}
-                    <a href="https://chat.whatsapp.com/EdV7GzXwuD56bSK2JhnFq4?s=cl&p=a&mlu=4&ilr=4" target="_blank" rel="noreferrer" style={{ textDecoration: 'underline', fontWeight: 'bold' }}>
+                    <a href="https://chat.whatsapp.com/FAvesuTwRwo1fF3qBfzaln?s=cl&p=a&mlu=4&ilr=4" target="_blank" rel="noreferrer" style={{ textDecoration: 'underline', fontWeight: 'bold' }}>
                       Join Here
                     </a>
                   </div>
                 </>
               ) : null}
 
-              {user.uid === team.leader_uid && !team.submission?.idea_title ? (
+              {user.uid === team.leader_uid && isEditingSubmission ? (
                 <form onSubmit={handleSubmission}>
                   <FormGroup>
                     <label>Idea Title</label>
@@ -489,9 +506,14 @@ export default function SdgDashboard() {
                   </p>
                   <p style={{ marginTop: '20px', color: colors.muted }}>
                     {team.submission?.idea_title 
-                      ? 'This submission is locked and cannot be edited.' 
+                      ? 'You can update your submission if needed.' 
                       : 'Only the team leader can edit the submission.'}
                   </p>
+                  {user.uid === team.leader_uid && (
+                    <Button onClick={() => setIsEditingSubmission(true)} style={{ marginTop: '12px' }}>
+                      {team.submission?.idea_title ? 'Edit Submission' : 'Add Submission'}
+                    </Button>
+                  )}
                 </div>
               )}
             </Card>
