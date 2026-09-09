@@ -1,6 +1,5 @@
 import { hero } from 'data/content.mjs';
 import { colors } from 'styles/tokens';
-import Ribbon from 'components/Ribbon';
 
 import {
   ColumnsSkyline,
@@ -37,7 +36,6 @@ const ACCENT_COLORS = [colors.orange, colors.sky, colors.ochre, colors.pink];
 
 const Hero = () => (
   <HeroRoot id="top" aria-labelledby="hero-title">
-    <Ribbon />
     <DecoTopLeft aria-hidden="true">
       <StairsLeft />
     </DecoTopLeft>
