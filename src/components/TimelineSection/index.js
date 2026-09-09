@@ -33,6 +33,27 @@ const TimelineSection = () => (
             <TimelineYear>{era.year}</TimelineYear>
             <TimelineCardTitle>{era.title}</TimelineCardTitle>
             <TimelineCardCopy>{era.copy}</TimelineCardCopy>
+            {era.cta && (
+              <div style={{ marginTop: '16px' }}>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    padding: '8px 16px',
+                    background: '#e02873', // the pink color matching the site theme or adjust as needed
+                    color: '#131112', // the ink color
+                    border: '2px solid #131112',
+                    boxShadow: '3px 3px 0 #850b3e', // maroon
+                    fontWeight: '650',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.85rem',
+                    textTransform: 'uppercase',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {era.cta}
+                </span>
+              </div>
+            )}
           </TimelineCard>
         );
 

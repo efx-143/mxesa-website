@@ -47,15 +47,16 @@ export const timeline = {
     'Join our upcoming operations and launch events as we kick off the MXESA journey.',
   eras: [
     {
-      year: 'August 2026',
+      year: 'September 7, 2026',
       title: 'MXESA Inauguration Ceremony',
-      copy: "The official launch of the Mechatronics Engineering Student's Association. Join us for the inaugural address, vision sharing, and the swearing-in of the founding committee. [Upcoming]",
+      copy: "The official launch of the Mechatronics Engineering Student's Association. Join us for the inaugural address, vision sharing, and the swearing-in of the founding committee.",
     },
     {
       year: 'September 2026',
       title: 'SDG Ideathon',
       copy: 'Form your team, lock a problem statement, then submit your Phase 1 idea for the SDG Ideathon.',
       href: '/event/sdg-ideathon',
+      cta: 'Register'
     },
   ],
 };
