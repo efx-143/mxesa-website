@@ -310,7 +310,7 @@ export default function Admin() {
       } finally {
         setIsUploading(false);
       }
-    }, 'image/jpeg');
+    }, 'image/jpeg', 1.0);
   };
 
   const handleEditMemberClick = (member) => {
