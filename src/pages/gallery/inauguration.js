@@ -134,7 +134,7 @@ export default function InaugurationGallery() {
         </TitleCard>
 
         {loading ? (
-          <p style={{ textAlign: 'center', fontFamily: fonts.mono, fontSize: '1.5rem', background: colors.white, padding: '20px', border: \`2px solid \${colors.ink}\` }}>Loading gallery...</p>
+          <p style={{ textAlign: 'center', fontFamily: fonts.mono, fontSize: '1.5rem', background: colors.white, padding: '20px', border: `2px solid ${colors.ink}` }}>Loading gallery...</p>
         ) : (
           <>
             {groupImages.length > 0 && (
@@ -143,7 +143,7 @@ export default function InaugurationGallery() {
                 <GalleryGrid>
                   {groupImages.map((img, idx) => (
                     <PhotoCard key={idx}>
-                      <img src={\`/gallery/inauguration/\${img.filename}\`} alt="Group" loading="lazy" />
+                      <img src={`/gallery/inauguration/${img.filename}`} alt="Group" loading="lazy" />
                     </PhotoCard>
                   ))}
                 </GalleryGrid>
@@ -156,7 +156,7 @@ export default function InaugurationGallery() {
                 <GalleryGrid>
                   {soloImages.map((img, idx) => (
                     <PhotoCard key={idx}>
-                      <img src={\`/gallery/inauguration/\${img.filename}\`} alt="Solo" loading="lazy" />
+                      <img src={`/gallery/inauguration/${img.filename}`} alt="Solo" loading="lazy" />
                     </PhotoCard>
                   ))}
                 </GalleryGrid>
@@ -169,7 +169,7 @@ export default function InaugurationGallery() {
                 <GalleryGrid>
                   {weirdImages.map((img, idx) => (
                     <PhotoCard key={idx}>
-                      <img src={\`/gallery/inauguration/\${img.filename}\`} alt="Weird" loading="lazy" />
+                      <img src={`/gallery/inauguration/${img.filename}`} alt="Weird" loading="lazy" />
                     </PhotoCard>
                   ))}
                 </GalleryGrid>
@@ -177,7 +177,7 @@ export default function InaugurationGallery() {
             )}
             
             {images.length === 0 && (
-              <p style={{ textAlign: 'center', fontFamily: fonts.mono, fontSize: '1.5rem', background: colors.white, padding: '20px', border: \`2px solid \${colors.ink}\` }}>
+              <p style={{ textAlign: 'center', fontFamily: fonts.mono, fontSize: '1.5rem', background: colors.white, padding: '20px', border: `2px solid ${colors.ink}` }}>
                 No images available yet. Check back later!
               </p>
             )}
