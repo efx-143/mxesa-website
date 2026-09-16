@@ -365,7 +365,7 @@ export default function Admin() {
   };
 
   const downloadCSV = () => {
-    const headers = ['Team Name', 'Leader Name', 'Leader Email', 'Leader Phone', 'Members', 'SDG Track', 'Idea Title', 'Phase 1 Description', 'Video Link'];
+    const headers = ['Team Name', 'Leader Name', 'Leader Email', 'Leader Phone', 'Branch', 'Members', 'SDG Track', 'Idea Title', 'Phase 1 Description', 'Video Link'];
     const rows = sdgTeams.map(team => {
       const leader = team.members?.find(m => m.uid === team.leader_uid) || {};
       const membersStr = team.members?.map(m => `${m.name} (${m.email})`).join('; ') || '';
@@ -374,6 +374,7 @@ export default function Admin() {
         `"${(leader.name || '').replace(/"/g, '""')}"`,
         `"${(leader.email || '').replace(/"/g, '""')}"`,
         `"${(team.leader_phone || '').replace(/"/g, '""')}"`,
+        `"${(team.branch || '').replace(/"/g, '""')}"`,
         `"${membersStr.replace(/"/g, '""')}"`,
         `"${(team.sdg_track || '').replace(/"/g, '""')}"`,
         `"${(team.submission?.idea_title || '').replace(/"/g, '""')}"`,
@@ -519,6 +520,7 @@ export default function Admin() {
                                 </ul>
                                 <p style={{ marginTop: '8px', fontSize: '0.9rem', color: colors.muted }}>
                                   Track: {team.sdg_track} <br />
+                                  Branch: {team.branch || 'N/A'} <br />
                                   Leader Phone: {team.leader_phone || 'N/A'} <br />
                                   Phase 1 Desc: {team.submission?.phase1_description || '-'}
                                 </p>
