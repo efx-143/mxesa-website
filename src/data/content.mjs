@@ -50,6 +50,8 @@ export const timeline = {
       year: 'September 7, 2026',
       title: 'MXESA Inauguration Ceremony',
       copy: "The official launch of the Mechatronics Engineering Student's Association. Join us for the inaugural address, vision sharing, and the swearing-in of the founding committee.",
+      href: '/gallery/inauguration',
+      cta: 'View Photos'
     },
     {
       year: 'September 2026',
