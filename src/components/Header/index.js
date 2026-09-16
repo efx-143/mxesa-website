@@ -101,7 +101,7 @@ const Header = ({ standalone = false }) => {
             <PageNavLink href="/team" onClick={() => setMenuOpen(false)}>
               Team
             </PageNavLink>
-            <PageNavLink href="/gallery/inauguration" onClick={() => setMenuOpen(false)}>
+            <PageNavLink href="/gallery" onClick={() => setMenuOpen(false)}>
               Gallery
             </PageNavLink>
             <NavCta href="#join" onClick={() => setMenuOpen(false)}>
