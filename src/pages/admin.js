@@ -260,20 +260,26 @@ export default function Admin() {
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
 
-    canvas.width = completedCrop.width;
-    canvas.height = completedCrop.height;
+    const pixelRatio = window.devicePixelRatio || 1;
+    const cropWidth = completedCrop.width * scaleX;
+    const cropHeight = completedCrop.height * scaleY;
+
+    canvas.width = cropWidth;
+    canvas.height = cropHeight;
     const ctx = canvas.getContext('2d');
+    
+    ctx.imageSmoothingQuality = 'high';
 
     ctx.drawImage(
       image,
       completedCrop.x * scaleX,
       completedCrop.y * scaleY,
-      completedCrop.width * scaleX,
-      completedCrop.height * scaleY,
+      cropWidth,
+      cropHeight,
       0,
       0,
-      completedCrop.width,
-      completedCrop.height,
+      cropWidth,
+      cropHeight
     );
 
     canvas.toBlob(async (blob) => {
