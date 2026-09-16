@@ -267,11 +267,11 @@ export default function SdgIdeathon() {
                     <strong>Registration Opens:</strong> September 8, 2026
                   </li>
                   <li>
-                    <strong>Phase 1 Submission Deadline:</strong> September 11,
+                    <strong>Phase 1 Submission Deadline:</strong> September 20,
                     2026 (11:59 PM IST)
                   </li>
                   <li>
-                    <strong>Top 10 Team Presentation:</strong> September 15, 2026
+                    <strong>Top 10 Team Presentation:</strong> September 22, 2026
                   </li>
                 </ul>
               </InfoBox>
@@ -285,7 +285,7 @@ export default function SdgIdeathon() {
                     <strong>Eligibility:</strong> Open to all students.
                   </li>
                   <li>
-                    <strong>Phase 1:</strong> Phase 1 submission includes Team Creation and Video Submission as per rules till 11th September.
+                    <strong>Phase 1:</strong> Phase 1 submission includes Team Creation and Video Submission as per rules till 20th September.
                   </li>
                   <li>
                     <strong>Phase 2 (Top 10):</strong> The best 10 ideas proceed to the presentation phase.
