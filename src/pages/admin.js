@@ -4,6 +4,8 @@ import styled from 'styled-components';
 import Header from 'components/Header';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from 'lib/firebase';
+import ReactCrop from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 import { colors, fonts } from 'styles/tokens';
 const PageRoot = styled.div`
   min-height: 100vh;
@@ -151,9 +153,14 @@ export default function Admin() {
     role: '',
     description: '',
     photo: '',
-    order: 0,
     socials: { instagram: '', linkedin: '', github: '' }
   });
+
+  const [imgSrc, setImgSrc] = useState('');
+  const [crop, setCrop] = useState({ unit: '%', width: 50, aspect: 1 });
+  const [completedCrop, setCompletedCrop] = useState(null);
+  const imgRef = React.useRef(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const API_BASE = process.env.NEXT_PUBLIC_SDG_API_BASE_URL || '';
 
@@ -226,9 +233,78 @@ export default function Admin() {
       role: '',
       description: '',
       photo: '',
-      order: 0,
       socials: { instagram: '', linkedin: '', github: '' }
     });
+    setImgSrc('');
+    setCompletedCrop(null);
+  };
+
+  const onSelectFile = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setCrop(undefined) // Makes crop preview update between images.
+      const reader = new FileReader()
+      reader.addEventListener('load', () =>
+        setImgSrc(reader.result?.toString() || ''),
+      )
+      reader.readAsDataURL(e.target.files[0])
+    }
+  }
+
+  const handleUploadCrop = async () => {
+    if (!completedCrop || !imgRef.current) return;
+
+    setIsUploading(true);
+
+    const image = imgRef.current;
+    const canvas = document.createElement('canvas');
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+
+    canvas.width = completedCrop.width;
+    canvas.height = completedCrop.height;
+    const ctx = canvas.getContext('2d');
+
+    ctx.drawImage(
+      image,
+      completedCrop.x * scaleX,
+      completedCrop.y * scaleY,
+      completedCrop.width * scaleX,
+      completedCrop.height * scaleY,
+      0,
+      0,
+      completedCrop.width,
+      completedCrop.height,
+    );
+
+    canvas.toBlob(async (blob) => {
+      if (!blob) {
+        setIsUploading(false);
+        return;
+      }
+      const formData = new FormData();
+      formData.append('image', blob);
+
+      try {
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=3d7be5df36153d070e833437a3434fa8`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          setMemberForm(prev => ({ ...prev, photo: data.data.url }));
+          setImgSrc('');
+          setCompletedCrop(null);
+          alert('Image uploaded successfully!');
+        } else {
+          alert('Upload failed');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error uploading');
+      } finally {
+        setIsUploading(false);
+      }
+    }, 'image/jpeg');
   };
 
   const handleEditMemberClick = (member) => {
@@ -238,7 +314,6 @@ export default function Admin() {
       role: member.role || '',
       description: member.description || '',
       photo: member.photo || '',
-      order: member.order || 0,
       socials: {
         instagram: member.socials?.instagram || '',
         linkedin: member.socials?.linkedin || '',
@@ -300,7 +375,7 @@ export default function Admin() {
         `"${(team.submission?.demo_video_link || '').replace(/"/g, '""')}"`
       ].join(',');
     });
-    
+
     const csvContent = [headers.join(','), ...rows].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -343,15 +418,15 @@ export default function Admin() {
             <Title>Admin Login</Title>
             {error && <p style={{ color: 'red', marginBottom: '16px' }}>{error}</p>}
             <form onSubmit={handleLogin}>
-              <Input 
-                type="text" 
-                placeholder="Username" 
+              <Input
+                type="text"
+                placeholder="Username"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
               />
-              <Input 
-                type="password" 
-                placeholder="Password" 
+              <Input
+                type="password"
+                placeholder="Password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
               />
@@ -381,7 +456,7 @@ export default function Admin() {
             MXESA Team Members
           </TabButton>
         </TabContainer>
-        
+
         {activeTab === 'sdg' && (
           <Card>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -437,8 +512,8 @@ export default function Admin() {
                                   ))}
                                 </ul>
                                 <p style={{ marginTop: '8px', fontSize: '0.9rem', color: colors.muted }}>
-                                  Track: {team.sdg_track} <br/>
-                                  Leader Phone: {team.leader_phone || 'N/A'} <br/>
+                                  Track: {team.sdg_track} <br />
+                                  Leader Phone: {team.leader_phone || 'N/A'} <br />
                                   Phase 1 Desc: {team.submission?.phase1_description || '-'}
                                 </p>
                               </div>
@@ -462,7 +537,7 @@ export default function Admin() {
                   <h2>MXESA Team Directory</h2>
                   <Button onClick={() => setIsEditingMember(true)}>+ Add Member</Button>
                 </div>
-                
+
                 {mxesaTeam.length === 0 ? (
                   <p>No team members added yet.</p>
                 ) : (
@@ -470,7 +545,6 @@ export default function Admin() {
                     <Table>
                       <thead>
                         <tr>
-                          <th>Order</th>
                           <th>Photo</th>
                           <th>Name</th>
                           <th>Role</th>
@@ -481,7 +555,6 @@ export default function Admin() {
                       <tbody>
                         {mxesaTeam.map(member => (
                           <tr key={member.id}>
-                            <td>{member.order}</td>
                             <td>
                               {member.photo ? <img src={member.photo} alt={member.name} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: '50%' }} /> : 'No Photo'}
                             </td>
@@ -509,37 +582,63 @@ export default function Admin() {
                 <form onSubmit={handleSaveMember}>
                   <FormGroup>
                     <label>Name</label>
-                    <Input required value={memberForm.name} onChange={e => setMemberForm({...memberForm, name: e.target.value})} />
+                    <Input required value={memberForm.name} onChange={e => setMemberForm({ ...memberForm, name: e.target.value })} />
                   </FormGroup>
                   <FormGroup>
                     <label>Role</label>
-                    <Input required value={memberForm.role} onChange={e => setMemberForm({...memberForm, role: e.target.value})} placeholder="e.g. President, Core Member" />
+                    <Input required value={memberForm.role} onChange={e => setMemberForm({ ...memberForm, role: e.target.value })} placeholder="e.g. President, Core Member" />
                   </FormGroup>
                   <FormGroup>
                     <label>Description</label>
-                    <TextArea value={memberForm.description} onChange={e => setMemberForm({...memberForm, description: e.target.value})} />
+                    <TextArea value={memberForm.description} onChange={e => setMemberForm({ ...memberForm, description: e.target.value })} />
                   </FormGroup>
                   <FormGroup>
-                    <label>Photo URL</label>
-                    <Input value={memberForm.photo} onChange={e => setMemberForm({...memberForm, photo: e.target.value})} placeholder="https://..." />
-                  </FormGroup>
-                  <FormGroup>
-                    <label>Display Order (Lowest first)</label>
-                    <Input type="number" value={memberForm.order} onChange={e => setMemberForm({...memberForm, order: e.target.value})} />
+                    <label>Profile Picture</label>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', flexDirection: 'column' }}>
+                      {memberForm.photo && (
+                        <img src={memberForm.photo} alt="Current" style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: '50%', marginBottom: 12 }} />
+                      )}
+                      <input type="file" accept="image/*" onChange={onSelectFile} />
+
+                      {imgSrc && (
+                        <div style={{ marginTop: 12, background: colors.paper, padding: 12, border: `2px solid ${colors.ink}` }}>
+                          <ReactCrop
+                            crop={crop}
+                            onChange={(c) => setCrop(c)}
+                            onComplete={(c) => setCompletedCrop(c)}
+                            aspect={1}
+                          >
+                            <img ref={imgRef} src={imgSrc} alt="Crop me" style={{ maxHeight: '300px' }} />
+                          </ReactCrop>
+
+                          <div style={{ marginTop: 12 }}>
+                            <Button type="button" onClick={handleUploadCrop} disabled={!completedCrop || isUploading}>
+                              {isUploading ? 'Uploading...' : 'Upload & Save Picture'}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      <Input
+                        value={memberForm.photo}
+                        onChange={e => setMemberForm({ ...memberForm, photo: e.target.value })}
+                        placeholder="Or paste an image URL here..."
+                        style={{ marginTop: 8 }}
+                      />
+                    </div>
                   </FormGroup>
                   <FormGroup>
                     <label>Instagram URL</label>
-                    <Input value={memberForm.socials.instagram} onChange={e => setMemberForm({...memberForm, socials: {...memberForm.socials, instagram: e.target.value}})} />
+                    <Input value={memberForm.socials.instagram} onChange={e => setMemberForm({ ...memberForm, socials: { ...memberForm.socials, instagram: e.target.value } })} />
                   </FormGroup>
                   <FormGroup>
                     <label>LinkedIn URL</label>
-                    <Input value={memberForm.socials.linkedin} onChange={e => setMemberForm({...memberForm, socials: {...memberForm.socials, linkedin: e.target.value}})} />
+                    <Input value={memberForm.socials.linkedin} onChange={e => setMemberForm({ ...memberForm, socials: { ...memberForm.socials, linkedin: e.target.value } })} />
                   </FormGroup>
                   <FormGroup>
                     <label>GitHub URL</label>
-                    <Input value={memberForm.socials.github} onChange={e => setMemberForm({...memberForm, socials: {...memberForm.socials, github: e.target.value}})} />
+                    <Input value={memberForm.socials.github} onChange={e => setMemberForm({ ...memberForm, socials: { ...memberForm.socials, github: e.target.value } })} />
                   </FormGroup>
-                  
+
                   <div style={{ display: 'flex', gap: '12px' }}>
                     <Button type="submit">Save Member</Button>
                     <Button type="button" onClick={resetMemberForm} style={{ background: colors.paper, color: colors.ink }}>Cancel</Button>

@@ -988,10 +988,10 @@ export const notFound = {
 
 export const siteMeta = {
   siteName: 'MXESA',
-  title: 'MXESA 2026 | AI belongs to everyone',
+  title: 'MXESA 2026-27 | Mechatronics Student Association',
   description:
-    '300+ in-person Fests plus a global online event, all about building with open source AI. Join a Fest near you this October.',
-  imageAlt: 'MXESA 2026',
+    'The official Mechatronics Engineering Student Association (MXESA). Uniting mechanics, electronics, and coding to build cyber-physical systems.',
+  imageAlt: 'MXESA',
 };
 
 /* Written for answer engines rather than readers, so it says plainly what the

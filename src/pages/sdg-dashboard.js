@@ -143,9 +143,14 @@ export default function SdgDashboard() {
   // Form states
   const [teamName, setTeamName] = useState('');
   const [leaderPhone, setLeaderPhone] = useState('');
+  const [branch, setBranch] = useState('MECHATRONICS');
   const [sdgTrack, setSdgTrack] = useState(SDGs[0]);
   const [addMemberName, setAddMemberName] = useState('');
   const [addMemberEmail, setAddMemberEmail] = useState('');
+  
+  // Edit Member states
+  const [editingMemberEmail, setEditingMemberEmail] = useState(null);
+  const [newMemberEmail, setNewMemberEmail] = useState('');
 
   // Submission states
   const [ideaTitle, setIdeaTitle] = useState('');
@@ -214,6 +219,7 @@ export default function SdgDashboard() {
           team_name: teamName,
           sdg_track: sdgTrack,
           leader_phone: leaderPhone,
+          branch: branch,
         }),
       });
 
@@ -252,6 +258,34 @@ export default function SdgDashboard() {
       } else {
         const err = await res.json();
         alert(err.error || 'Failed to add member');
+      }
+    } catch (err) {
+      alert('Network error');
+    }
+  };
+
+  const handleEditMemberEmail = async (e, oldEmail) => {
+    e.preventDefault();
+    if (!newMemberEmail) return;
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`${API_BASE}/api/sdg/teams/${team.id}/edit_member_email`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ old_email: oldEmail, new_email: newMemberEmail }),
+      });
+
+      if (res.ok) {
+        alert('Email updated successfully!');
+        setEditingMemberEmail(null);
+        setNewMemberEmail('');
+        await fetchTeamData(user);
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Failed to update email');
       }
     } catch (err) {
       alert('Network error');
@@ -364,6 +398,20 @@ export default function SdgDashboard() {
                   placeholder="e.g. +91 9876543210"
                 />
               </FormGroup>
+              <FormGroup>
+                <label>Branch</label>
+                <select
+                  value={branch}
+                  onChange={(e) => setBranch(e.target.value)}
+                  required
+                >
+                  {['MECHATRONICS', 'AIDS', 'COMPUTER SCIENCE', 'ROBOTICS AND AI', 'CIVIL'].map((b) => (
+                    <option key={b} value={b}>
+                      {b}
+                    </option>
+                  ))}
+                </select>
+              </FormGroup>
               <Button type="submit">Create Team</Button>
             </form>
           </Card>
@@ -374,15 +422,47 @@ export default function SdgDashboard() {
               <p>
                 <strong>Track:</strong> {team.sdg_track}
               </p>
+              <p>
+                <strong>Branch:</strong> {team.branch || 'Not provided'}
+              </p>
 
               <h3 style={{ marginTop: '24px', fontFamily: fonts.display }}>
                 Members
               </h3>
               <ul>
                 {team.members.map((m) => (
-                  <li key={m.email}>
-                    {m.name} ({m.email}){' '}
-                    {m.uid === team.leader_uid && <strong>[Leader]</strong>}
+                  <li key={m.email} style={{ marginBottom: '8px' }}>
+                    {editingMemberEmail === m.email ? (
+                      <form onSubmit={(e) => handleEditMemberEmail(e, m.email)} style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
+                        <strong>{m.name}</strong> - 
+                        <input
+                          type="email"
+                          value={newMemberEmail}
+                          onChange={(e) => setNewMemberEmail(e.target.value)}
+                          placeholder="New Email"
+                          required
+                          style={{ padding: '4px', border: `1px solid ${colors.ink}` }}
+                        />
+                        <button type="submit" style={{ padding: '4px 8px', background: colors.orange, color: colors.white, border: 'none', cursor: 'pointer' }}>Save</button>
+                        <button type="button" onClick={() => setEditingMemberEmail(null)} style={{ padding: '4px 8px', background: colors.muted, color: colors.white, border: 'none', cursor: 'pointer' }}>Cancel</button>
+                      </form>
+                    ) : (
+                      <>
+                        {m.name} ({m.email}){' '}
+                        {m.uid === team.leader_uid && <strong>[Leader]</strong>}
+                        {user.uid === team.leader_uid && m.uid !== team.leader_uid && (
+                          <button
+                            onClick={() => {
+                              setEditingMemberEmail(m.email);
+                              setNewMemberEmail(m.email);
+                            }}
+                            style={{ marginLeft: '12px', padding: '2px 8px', fontSize: '0.8rem', cursor: 'pointer' }}
+                          >
+                            Edit Email
+                          </button>
+                        )}
+                      </>
+                    )}
                   </li>
                 ))}
               </ul>

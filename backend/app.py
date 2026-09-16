@@ -97,12 +97,14 @@ def create_team():
         return jsonify({'error': 'Unauthorized'}), 401
         
     data = request.json
+    data = request.json
     team_name = data.get('team_name')
     sdg_track = data.get('sdg_track')
     leader_phone = data.get('leader_phone')
+    branch = data.get('branch')
     
-    if not team_name or not sdg_track or not leader_phone:
-        return jsonify({'error': 'Missing team_name, sdg_track, or leader_phone'}), 400
+    if not team_name or not sdg_track or not leader_phone or not branch:
+        return jsonify({'error': 'Missing team_name, sdg_track, leader_phone, or branch'}), 400
         
     existing_team = get_user_team(user['uid'])
     if existing_team:
@@ -111,6 +113,7 @@ def create_team():
     team_data = {
         'name': team_name,
         'sdg_track': sdg_track,
+        'branch': branch,
         'leader_uid': user['uid'],
         'leader_phone': leader_phone,
         'member_uids': [user['uid']],
@@ -118,7 +121,8 @@ def create_team():
             'uid': user['uid'],
             'email': user.get('email', ''),
             'name': user.get('name', ''),
-            'phone': leader_phone
+            'phone': leader_phone,
+            'branch': branch
         }],
         'submission': None,
         'created_at': firestore.SERVER_TIMESTAMP
@@ -202,6 +206,46 @@ def add_member(team_id):
     })
     
     return jsonify({'message': 'Member added successfully'}), 200
+
+@app.route('/api/sdg/teams/<team_id>/edit_member_email', methods=['PUT'])
+def edit_member_email(team_id):
+    user = verify_token(request)
+    if not user:
+        return jsonify({'error': 'Unauthorized'}), 401
+        
+    team_ref = db.collection('sdg_teams').document(team_id)
+    team = team_ref.get()
+    
+    if not team.exists:
+        return jsonify({'error': 'Team not found'}), 404
+        
+    team_data = team.to_dict()
+    
+    if team_data.get('leader_uid') != user['uid']:
+        return jsonify({'error': 'Only the leader can edit member emails'}), 403
+        
+    old_email = request.json.get('old_email')
+    new_email = request.json.get('new_email')
+    
+    if not old_email or not new_email:
+        return jsonify({'error': 'old_email and new_email are required'}), 400
+        
+    members = team_data.get('members', [])
+    updated = False
+    for m in members:
+        if m.get('email') == old_email:
+            m['email'] = new_email
+            updated = True
+            break
+            
+    if not updated:
+        return jsonify({'error': 'Member with the given email not found'}), 404
+        
+    team_ref.update({
+        'members': members
+    })
+    
+    return jsonify({'message': 'Member email updated successfully'}), 200
 
 import random
 
