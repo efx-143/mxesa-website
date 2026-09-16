@@ -247,6 +247,33 @@ def edit_member_email(team_id):
     
     return jsonify({'message': 'Member email updated successfully'}), 200
 
+@app.route('/api/sdg/teams/<team_id>/edit_branch', methods=['PUT'])
+def edit_branch(team_id):
+    user = verify_token(request)
+    if not user:
+        return jsonify({'error': 'Unauthorized'}), 401
+        
+    team_ref = db.collection('sdg_teams').document(team_id)
+    team = team_ref.get()
+    
+    if not team.exists:
+        return jsonify({'error': 'Team not found'}), 404
+        
+    team_data = team.to_dict()
+    
+    if team_data.get('leader_uid') != user['uid']:
+        return jsonify({'error': 'Only the leader can edit the branch'}), 403
+        
+    new_branch = request.json.get('branch')
+    if not new_branch:
+        return jsonify({'error': 'branch is required'}), 400
+        
+    team_ref.update({
+        'branch': new_branch
+    })
+    
+    return jsonify({'message': 'Team branch updated successfully'}), 200
+
 import random
 
 @app.route('/api/sdg/auth/forgot_password', methods=['POST'])

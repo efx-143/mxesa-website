@@ -104,7 +104,7 @@ class MyDocument extends Document {
               that reason; components/Banner then unmounts the strip
               outright once React is running. */}
           <script dangerouslySetInnerHTML={{ __html: bannerPrePaintScript }} />
-          <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+          <link rel="icon" href="/favicon.ico" />
           {/* Both font hosts are preconnected: googleapis.com serves the
               stylesheet, gstatic.com the font files. The gstatic hint needs
               crossOrigin because fonts are fetched anonymously — without it

@@ -151,6 +151,9 @@ export default function SdgDashboard() {
   // Edit Member states
   const [editingMemberEmail, setEditingMemberEmail] = useState(null);
   const [newMemberEmail, setNewMemberEmail] = useState('');
+  
+  const [isEditingBranch, setIsEditingBranch] = useState(false);
+  const [newBranch, setNewBranch] = useState('');
 
   // Submission states
   const [ideaTitle, setIdeaTitle] = useState('');
@@ -292,6 +295,31 @@ export default function SdgDashboard() {
     }
   };
 
+  const handleEditBranch = async (e) => {
+    e.preventDefault();
+    if (!newBranch) return;
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`${API_BASE}/api/sdg/teams/${team.id}/edit_branch`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ branch: newBranch }),
+      });
+      if (res.ok) {
+        setIsEditingBranch(false);
+        await fetchTeamData(user);
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Failed to update branch');
+      }
+    } catch (err) {
+      alert('Network error');
+    }
+  };
+
   const handleSubmission = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -423,7 +451,39 @@ export default function SdgDashboard() {
                 <strong>Track:</strong> {team.sdg_track}
               </p>
               <p>
-                <strong>Branch:</strong> {team.branch || 'Not provided'}
+                <strong>Branch:</strong>{' '}
+                {isEditingBranch ? (
+                  <form onSubmit={handleEditBranch} style={{ display: 'inline-flex', gap: '8px', alignItems: 'center', marginLeft: '8px' }}>
+                    <select
+                      value={newBranch}
+                      onChange={(e) => setNewBranch(e.target.value)}
+                      required
+                      style={{ padding: '4px', border: `1px solid ${colors.ink}` }}
+                    >
+                      <option value="" disabled>Select branch</option>
+                      {['MECHATRONICS', 'AIDS', 'COMPUTER SCIENCE', 'ROBOTICS AND AI', 'CIVIL'].map((b) => (
+                        <option key={b} value={b}>{b}</option>
+                      ))}
+                    </select>
+                    <button type="submit" style={{ padding: '4px 8px', background: colors.orange, color: colors.white, border: 'none', cursor: 'pointer' }}>Save</button>
+                    <button type="button" onClick={() => setIsEditingBranch(false)} style={{ padding: '4px 8px', background: colors.muted, color: colors.white, border: 'none', cursor: 'pointer' }}>Cancel</button>
+                  </form>
+                ) : (
+                  <>
+                    {team.branch || 'Not provided'}
+                    {user.uid === team.leader_uid && (
+                      <button
+                        onClick={() => {
+                          setIsEditingBranch(true);
+                          setNewBranch(team.branch || 'MECHATRONICS');
+                        }}
+                        style={{ marginLeft: '12px', padding: '2px 8px', fontSize: '0.8rem', cursor: 'pointer' }}
+                      >
+                        Edit Branch
+                      </button>
+                    )}
+                  </>
+                )}
               </p>
 
               <h3 style={{ marginTop: '24px', fontFamily: fonts.display }}>

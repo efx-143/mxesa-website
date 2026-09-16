@@ -594,37 +594,75 @@ export default function Admin() {
                   </FormGroup>
                   <FormGroup>
                     <label>Profile Picture</label>
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', flexDirection: 'column' }}>
-                      {memberForm.photo && (
-                        <img src={memberForm.photo} alt="Current" style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: '50%', marginBottom: 12 }} />
-                      )}
-                      <input type="file" accept="image/*" onChange={onSelectFile} />
-
-                      {imgSrc && (
-                        <div style={{ marginTop: 12, background: colors.paper, padding: 12, border: `2px solid ${colors.ink}` }}>
-                          <ReactCrop
-                            crop={crop}
-                            onChange={(c) => setCrop(c)}
-                            onComplete={(c) => setCompletedCrop(c)}
-                            aspect={1}
-                          >
-                            <img ref={imgRef} src={imgSrc} alt="Crop me" style={{ maxHeight: '300px' }} />
-                          </ReactCrop>
-
-                          <div style={{ marginTop: 12 }}>
-                            <Button type="button" onClick={handleUploadCrop} disabled={!completedCrop || isUploading}>
-                              {isUploading ? 'Uploading...' : 'Upload & Save Picture'}
-                            </Button>
-                          </div>
+                    <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '16px' }}>
+                      {memberForm.photo ? (
+                        <img src={memberForm.photo} alt="Current" style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: '50%', border: `4px solid ${colors.orange}`, boxShadow: `4px 4px 0 ${colors.ink}` }} />
+                      ) : (
+                        <div style={{ width: 120, height: 120, borderRadius: '50%', background: colors.paper, border: `2px dashed ${colors.ink}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.muted }}>
+                          No Photo
                         </div>
                       )}
-                      <Input
-                        value={memberForm.photo}
-                        onChange={e => setMemberForm({ ...memberForm, photo: e.target.value })}
-                        placeholder="Or paste an image URL here..."
-                        style={{ marginTop: 8 }}
-                      />
+                      
+                      <div style={{ flex: 1 }}>
+                        <div style={{
+                          position: 'relative',
+                          width: '100%',
+                          border: `2px dashed ${colors.orange}`,
+                          borderRadius: '8px',
+                          padding: '32px',
+                          textAlign: 'center',
+                          background: colors.paper,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                        onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                        >
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={onSelectFile} 
+                            style={{
+                              opacity: 0,
+                              position: 'absolute',
+                              top: 0, left: 0, right: 0, bottom: 0,
+                              width: '100%', height: '100%', cursor: 'pointer'
+                            }} 
+                          />
+                          <div style={{ pointerEvents: 'none' }}>
+                            <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: '12px' }}>📸</span>
+                            <span style={{ fontWeight: 'bold', color: colors.ink, fontFamily: fonts.sans, fontSize: '1.1rem' }}>Click or Drag Image to Upload</span>
+                          </div>
+                        </div>
+                        <Input
+                          value={memberForm.photo}
+                          onChange={e => setMemberForm({ ...memberForm, photo: e.target.value })}
+                          placeholder="Or paste an image URL here..."
+                          style={{ marginTop: 12 }}
+                        />
+                      </div>
                     </div>
+                    
+                    {imgSrc && (
+                      <div style={{ marginTop: 24, background: '#fff', padding: 32, border: `2px solid ${colors.ink}`, borderRadius: '8px', boxShadow: `8px 8px 0 ${colors.sky}`, textAlign: 'center' }}>
+                        <h3 style={{ marginTop: 0, fontFamily: fonts.display, color: colors.orange }}>Crop Image</h3>
+                        <ReactCrop
+                          crop={crop}
+                          onChange={(c) => setCrop(c)}
+                          onComplete={(c) => setCompletedCrop(c)}
+                          aspect={1}
+                          circularCrop
+                        >
+                          <img ref={imgRef} src={imgSrc} alt="Crop me" style={{ maxHeight: '400px', border: `1px solid ${colors.paper}` }} />
+                        </ReactCrop>
+
+                        <div style={{ marginTop: 24 }}>
+                          <Button type="button" onClick={handleUploadCrop} disabled={!completedCrop || isUploading} style={{ width: '100%' }}>
+                            {isUploading ? 'Uploading to Cloud...' : 'Upload & Save Crop'}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </FormGroup>
                   <FormGroup>
                     <label>Instagram URL</label>
