@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import styled from 'styled-components';
 import Header from 'components/Header';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from 'lib/firebase';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -144,6 +144,10 @@ export default function Admin() {
     setExpandedRow(expandedRow === id ? null : id);
   };
 
+  // Gallery State
+  const [galleryImages, setGalleryImages] = useState([]);
+  const [isSavingGallery, setIsSavingGallery] = useState(false);
+
   // MXESA Team State
   const [mxesaTeam, setMxesaTeam] = useState([]);
   const [isEditingMember, setIsEditingMember] = useState(false);
@@ -175,6 +179,7 @@ export default function Admin() {
   const fetchAllData = (token) => {
     fetchSdgTeams(token);
     fetchMxesaTeam();
+    fetchGalleryImages();
   };
 
   const handleLogin = (e) => {
@@ -223,6 +228,38 @@ export default function Admin() {
     } catch (err) {
       console.error('Error fetching MXESA team:', err);
     }
+  };
+
+  const fetchGalleryImages = async () => {
+    try {
+      const docSnap = await getDoc(doc(db, 'gallery', 'inauguration'));
+      if (docSnap.exists()) {
+        setGalleryImages(docSnap.data().images || []);
+      } else {
+        setGalleryImages([]);
+      }
+    } catch (err) {
+      console.error('Error fetching gallery:', err);
+    }
+  };
+
+  const handleSaveGallery = async () => {
+    setIsSavingGallery(true);
+    try {
+      await setDoc(doc(db, 'gallery', 'inauguration'), { images: galleryImages });
+      alert('Gallery saved successfully!');
+    } catch (err) {
+      console.error(err);
+      alert('Error saving gallery');
+    } finally {
+      setIsSavingGallery(false);
+    }
+  };
+
+  const handleGalleryChange = (idx, field, value) => {
+    const updated = [...galleryImages];
+    updated[idx][field] = value;
+    setGalleryImages(updated);
   };
 
   const resetMemberForm = () => {
@@ -462,6 +499,9 @@ export default function Admin() {
           <TabButton $active={activeTab === 'mxesa'} onClick={() => setActiveTab('mxesa')}>
             MXESA Team Members
           </TabButton>
+          <TabButton $active={activeTab === 'gallery'} onClick={() => setActiveTab('gallery')}>
+            Gallery Setup
+          </TabButton>
         </TabContainer>
 
         {activeTab === 'sdg' && (
@@ -693,6 +733,49 @@ export default function Admin() {
               </Card>
             )}
           </>
+        )}
+
+        {activeTab === 'gallery' && (
+          <Card>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2>Gallery Setup</h2>
+              <Button onClick={handleSaveGallery} disabled={isSavingGallery}>
+                {isSavingGallery ? 'Saving...' : 'Save Gallery'}
+              </Button>
+            </div>
+            {galleryImages.length === 0 ? (
+              <p>No images found in Firestore. Try syncing from public folder.</p>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+                {galleryImages.map((img, idx) => (
+                  <div key={img.filename} style={{ border: `2px solid ${colors.ink}`, padding: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <img src={`/gallery/inauguration/${img.filename}`} alt={img.filename} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
+                    <FormGroup style={{ marginBottom: 0 }}>
+                      <label>Category</label>
+                      <select 
+                        value={img.category} 
+                        onChange={(e) => handleGalleryChange(idx, 'category', e.target.value)}
+                        style={{ width: '100%', padding: '8px', border: `2px solid ${colors.ink}`, fontFamily: fonts.mono }}
+                      >
+                        <option value="group">Group</option>
+                        <option value="solo">Solo</option>
+                        <option value="weird">Weird</option>
+                      </select>
+                    </FormGroup>
+                    <FormGroup style={{ marginBottom: 0 }}>
+                      <label>Order</label>
+                      <Input 
+                        type="number" 
+                        value={img.order} 
+                        onChange={(e) => handleGalleryChange(idx, 'order', parseInt(e.target.value, 10))}
+                        style={{ marginBottom: 0 }}
+                      />
+                    </FormGroup>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
         )}
       </MainContent>
     </PageRoot>
