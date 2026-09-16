@@ -73,6 +73,7 @@ const PhotoCard = styled.div`
   padding: 12px;
   box-shadow: 8px 8px 0 ${colors.orange};
   transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
 
   &:hover {
     transform: translate(-4px, -4px);
@@ -88,9 +89,63 @@ const PhotoCard = styled.div`
   }
 `;
 
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(19, 17, 18, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+  cursor: pointer;
+`;
+
+const ModalContent = styled.div`
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  
+  img {
+    max-width: 100%;
+    max-height: 90vh;
+    border: 4px solid ${colors.white};
+    box-shadow: 12px 12px 0 ${colors.ink};
+    display: block;
+  }
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  background: ${colors.orange};
+  color: ${colors.white};
+  border: 2px solid ${colors.ink};
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-family: ${fonts.mono};
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 4px 4px 0 ${colors.ink};
+
+  &:hover {
+    background: ${colors.maroon};
+  }
+`;
+
 export default function InaugurationGallery() {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -142,7 +197,7 @@ export default function InaugurationGallery() {
                 <CategoryTitle>Group Photos</CategoryTitle>
                 <GalleryGrid>
                   {groupImages.map((img, idx) => (
-                    <PhotoCard key={idx}>
+                    <PhotoCard key={idx} onClick={() => setSelectedImage(img.filename)}>
                       <img src={`/gallery/inauguration/${img.filename}`} alt="Group" loading="lazy" />
                     </PhotoCard>
                   ))}
@@ -155,7 +210,7 @@ export default function InaugurationGallery() {
                 <CategoryTitle style={{ background: colors.orange }}>Solo Shots</CategoryTitle>
                 <GalleryGrid>
                   {soloImages.map((img, idx) => (
-                    <PhotoCard key={idx}>
+                    <PhotoCard key={idx} onClick={() => setSelectedImage(img.filename)}>
                       <img src={`/gallery/inauguration/${img.filename}`} alt="Solo" loading="lazy" />
                     </PhotoCard>
                   ))}
@@ -168,7 +223,7 @@ export default function InaugurationGallery() {
                 <CategoryTitle style={{ background: colors.sky }}>Weird & Fun</CategoryTitle>
                 <GalleryGrid>
                   {weirdImages.map((img, idx) => (
-                    <PhotoCard key={idx}>
+                    <PhotoCard key={idx} onClick={() => setSelectedImage(img.filename)}>
                       <img src={`/gallery/inauguration/${img.filename}`} alt="Weird" loading="lazy" />
                     </PhotoCard>
                   ))}
@@ -184,6 +239,16 @@ export default function InaugurationGallery() {
           </>
         )}
       </MainContent>
+      
+      {selectedImage && (
+        <ModalOverlay onClick={() => setSelectedImage(null)}>
+          <ModalContent onClick={e => e.stopPropagation()}>
+            <CloseButton onClick={() => setSelectedImage(null)}>✕</CloseButton>
+            <img src={`/gallery/inauguration/${selectedImage}`} alt="Full size" />
+          </ModalContent>
+        </ModalOverlay>
+      )}
+
       <Footer />
     </PageRoot>
   );
