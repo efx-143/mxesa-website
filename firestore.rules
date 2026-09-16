@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Match the sdg_teams collection
+    match /sdg_teams/{teamId} {
+      
+      // Helper function to check if the user is a member of the team
+      function isMember() {
+        return request.auth != null && 
+               request.auth.token.email in resource.data.members_emails;
+      }
+      
+      // Helper function to check if the user is the leader of the team
+      function isLeader() {
+        return request.auth != null && 
+               request.auth.uid == resource.data.leader_uid;
+      }
+
+      // Read is allowed if the user's email is in the team's member list
+      // Or if we check the members array which contains objects, it's harder in rules.
+      // Assuming members array might contain map {uid, email, name}.
+      // Let's just check if their uid is in a field `member_uids` which the backend should maintain, 
+      // or we can allow if request.auth.uid == leader_uid for now as a fallback.
+      // A more robust way if members is a list of maps:
+      // return request.auth.uid in resource.data.member_uids; 
+      
+      // I'll assume the document structure has a list of `member_uids` for easier querying.
+      allow read: if request.auth != null && (request.auth.uid in resource.data.member_uids);
+      
+      // Creation is allowed if the user is authenticated and sets themselves as the leader
+      allow create: if request.auth != null && 
+                    request.resource.data.leader_uid == request.auth.uid;
+                    
+      // Updates (like editing submissions) are strictly restricted to the leader
+      allow update: if request.auth != null && 
+                    request.auth.uid == resource.data.leader_uid;
+                    
+      // Deletes only by the leader (or admin)
+      allow delete: if request.auth != null && 
+                    request.auth.uid == resource.data.leader_uid;
+    }
+  }
+}
