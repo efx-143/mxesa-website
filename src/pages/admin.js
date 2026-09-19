@@ -519,6 +519,7 @@ export default function Admin() {
                 <Table>
                   <thead>
                     <tr>
+                      <th>Sr No</th>
                       <th>Team</th>
                       <th>Heads</th>
                       <th>Idea</th>
@@ -527,9 +528,10 @@ export default function Admin() {
                     </tr>
                   </thead>
                   <tbody>
-                    {sdgTeams.map(team => (
+                    {sdgTeams.map((team, index) => (
                       <React.Fragment key={team.id}>
                         <tr onClick={() => toggleExpandedRow(team.id)} style={{ cursor: 'pointer' }}>
+                          <td>{index + 1}</td>
                           <td>{team.name}</td>
                           <td>
                             {team.members?.find(m => m.uid === team.leader_uid)?.name || 'Leader'}
@@ -550,7 +552,7 @@ export default function Admin() {
                         </tr>
                         {expandedRow === team.id && (
                           <tr style={{ background: colors.paper }}>
-                            <td colSpan="5">
+                            <td colSpan="6">
                               <div style={{ padding: '12px' }}>
                                 <strong>Members:</strong>
                                 <ul>
