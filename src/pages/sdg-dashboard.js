@@ -433,7 +433,7 @@ export default function SdgDashboard() {
                   onChange={(e) => setBranch(e.target.value)}
                   required
                 >
-                  {['MECHATRONICS', 'AIDS', 'COMPUTER SCIENCE', 'ROBOTICS AND AI', 'CIVIL'].map((b) => (
+                  {['MECHATRONICS', 'AIDS', 'COMPUTER SCIENCE', 'ROBOTICS AND AI', 'CIVIL', 'MECHANICAL'].map((b) => (
                     <option key={b} value={b}>
                       {b}
                     </option>
@@ -461,7 +461,7 @@ export default function SdgDashboard() {
                       style={{ padding: '4px', border: `1px solid ${colors.ink}` }}
                     >
                       <option value="" disabled>Select branch</option>
-                      {['MECHATRONICS', 'AIDS', 'COMPUTER SCIENCE', 'ROBOTICS AND AI', 'CIVIL'].map((b) => (
+                      {['MECHATRONICS', 'AIDS', 'COMPUTER SCIENCE', 'ROBOTICS AND AI', 'CIVIL', 'MECHANICAL'].map((b) => (
                         <option key={b} value={b}>{b}</option>
                       ))}
                     </select>
