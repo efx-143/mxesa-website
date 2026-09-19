@@ -102,6 +102,7 @@ def create_team():
     sdg_track = data.get('sdg_track')
     leader_phone = data.get('leader_phone')
     branch = data.get('branch')
+    leader_name = data.get('leader_name', user.get('name', ''))
     
     if not team_name or not sdg_track or not leader_phone or not branch:
         return jsonify({'error': 'Missing team_name, sdg_track, leader_phone, or branch'}), 400
@@ -120,7 +121,7 @@ def create_team():
         'members': [{
             'uid': user['uid'],
             'email': user.get('email', ''),
-            'name': user.get('name', ''),
+            'name': leader_name,
             'phone': leader_phone,
             'branch': branch
         }],
@@ -246,6 +247,41 @@ def edit_member_email(team_id):
     })
     
     return jsonify({'message': 'Member email updated successfully'}), 200
+
+@app.route('/api/sdg/teams/<team_id>/edit_leader_name', methods=['PUT'])
+def edit_leader_name(team_id):
+    user = verify_token(request)
+    if not user:
+        return jsonify({'error': 'Unauthorized'}), 401
+        
+    team_ref = db.collection('sdg_teams').document(team_id)
+    team = team_ref.get()
+    
+    if not team.exists:
+        return jsonify({'error': 'Team not found'}), 404
+        
+    team_data = team.to_dict()
+    
+    if team_data.get('leader_uid') != user['uid']:
+        return jsonify({'error': 'Only the leader can edit their name'}), 403
+        
+    new_name = request.json.get('leader_name')
+    if not new_name:
+        return jsonify({'error': 'leader_name is required'}), 400
+        
+    members = team_data.get('members', [])
+    updated = False
+    for m in members:
+        if m.get('uid') == user['uid']:
+            m['name'] = new_name
+            updated = True
+            break
+            
+    if not updated:
+        return jsonify({'error': 'Leader not found in members'}), 404
+        
+    team_ref.update({'members': members})
+    return jsonify({'message': 'Leader name updated successfully'}), 200
 
 @app.route('/api/sdg/teams/<team_id>/edit_branch', methods=['PUT'])
 def edit_branch(team_id):

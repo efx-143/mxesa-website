@@ -143,6 +143,7 @@ export default function SdgDashboard() {
   // Form states
   const [teamName, setTeamName] = useState('');
   const [leaderPhone, setLeaderPhone] = useState('');
+  const [leaderName, setLeaderName] = useState('');
   const [branch, setBranch] = useState('MECHATRONICS');
   const [sdgTrack, setSdgTrack] = useState(SDGs[0]);
   const [addMemberName, setAddMemberName] = useState('');
@@ -154,6 +155,9 @@ export default function SdgDashboard() {
   
   const [isEditingBranch, setIsEditingBranch] = useState(false);
   const [newBranch, setNewBranch] = useState('');
+
+  const [isEditingLeaderName, setIsEditingLeaderName] = useState(false);
+  const [newLeaderName, setNewLeaderName] = useState('');
 
   // Submission states
   const [ideaTitle, setIdeaTitle] = useState('');
@@ -172,6 +176,7 @@ export default function SdgDashboard() {
         return;
       }
       setUser(firebaseUser);
+      setLeaderName(firebaseUser.displayName || '');
       await fetchTeamData(firebaseUser);
     });
     return () => unsubscribe();
@@ -223,6 +228,7 @@ export default function SdgDashboard() {
           sdg_track: sdgTrack,
           leader_phone: leaderPhone,
           branch: branch,
+          leader_name: leaderName,
         }),
       });
 
@@ -269,7 +275,7 @@ export default function SdgDashboard() {
 
   const handleEditMemberEmail = async (e, oldEmail) => {
     e.preventDefault();
-    if (!newMemberEmail) return;
+    if (!newMemberEmail || oldEmail === newMemberEmail) return;
     try {
       const token = await user.getIdToken();
       const res = await fetch(`${API_BASE}/api/sdg/teams/${team.id}/edit_member_email`, {
@@ -282,13 +288,38 @@ export default function SdgDashboard() {
       });
 
       if (res.ok) {
-        alert('Email updated successfully!');
         setEditingMemberEmail(null);
         setNewMemberEmail('');
         await fetchTeamData(user);
       } else {
         const err = await res.json();
-        alert(err.error || 'Failed to update email');
+        alert(err.error || 'Failed to edit email');
+      }
+    } catch (err) {
+      alert('Network error');
+    }
+  };
+
+  const handleEditLeaderName = async (e) => {
+    e.preventDefault();
+    if (!newLeaderName.trim()) return;
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`${API_BASE}/api/sdg/teams/${team.id}/edit_leader_name`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ leader_name: newLeaderName }),
+      });
+      if (res.ok) {
+        setIsEditingLeaderName(false);
+        setNewLeaderName('');
+        await fetchTeamData(user);
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Failed to update leader name');
       }
     } catch (err) {
       alert('Network error');
@@ -403,6 +434,16 @@ export default function SdgDashboard() {
                 />
               </FormGroup>
               <FormGroup>
+                <label>Leader Name</label>
+                <input
+                  type="text"
+                  value={leaderName}
+                  onChange={(e) => setLeaderName(e.target.value)}
+                  required
+                  placeholder="E.g. John Doe"
+                />
+              </FormGroup>
+              <FormGroup>
                 <label>SDG Track</label>
                 <select
                   value={sdgTrack}
@@ -492,9 +533,23 @@ export default function SdgDashboard() {
               <ul>
                 {team.members.map((m) => (
                   <li key={m.email} style={{ marginBottom: '8px' }}>
-                    {editingMemberEmail === m.email ? (
+                    {m.uid === team.leader_uid && isEditingLeaderName ? (
+                      <form onSubmit={handleEditLeaderName} style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          value={newLeaderName}
+                          onChange={(e) => setNewLeaderName(e.target.value)}
+                          placeholder="Leader Name"
+                          required
+                          style={{ padding: '4px', border: `1px solid ${colors.ink}` }}
+                        />
+                        <strong>({m.email}) [Leader]</strong>
+                        <button type="submit" style={{ padding: '4px 8px', background: colors.orange, color: colors.white, border: 'none', cursor: 'pointer' }}>Save</button>
+                        <button type="button" onClick={() => setIsEditingLeaderName(false)} style={{ padding: '4px 8px', background: colors.muted, color: colors.white, border: 'none', cursor: 'pointer' }}>Cancel</button>
+                      </form>
+                    ) : editingMemberEmail === m.email ? (
                       <form onSubmit={(e) => handleEditMemberEmail(e, m.email)} style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
-                        <strong>{m.name}</strong> - 
+                        <strong>{m.name || 'No Name'}</strong> - 
                         <input
                           type="email"
                           value={newMemberEmail}
@@ -508,8 +563,23 @@ export default function SdgDashboard() {
                       </form>
                     ) : (
                       <>
-                        {m.name} ({m.email}){' '}
-                        {m.uid === team.leader_uid && <strong>[Leader]</strong>}
+                        {m.name || 'No Name'} ({m.email}){' '}
+                        {m.uid === team.leader_uid && (
+                          <>
+                            <strong>[Leader]</strong>
+                            {user.uid === team.leader_uid && (
+                              <button
+                                onClick={() => {
+                                  setIsEditingLeaderName(true);
+                                  setNewLeaderName(m.name || '');
+                                }}
+                                style={{ marginLeft: '12px', padding: '2px 8px', fontSize: '0.8rem', cursor: 'pointer' }}
+                              >
+                                Edit Name
+                              </button>
+                            )}
+                          </>
+                        )}
                         {user.uid === team.leader_uid && m.uid !== team.leader_uid && (
                           <button
                             onClick={() => {
