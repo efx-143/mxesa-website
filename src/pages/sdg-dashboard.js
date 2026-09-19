@@ -525,7 +525,15 @@ export default function SdgDashboard() {
                       value={newBranch}
                       onChange={(e) => setNewBranch(e.target.value)}
                       required
-                      style={{ padding: '4px', border: `1px solid ${colors.ink}` }}
+                      style={{ 
+                        padding: '6px 12px', 
+                        border: `2px solid ${colors.ink}`,
+                        fontFamily: fonts.sans,
+                        fontSize: '0.9rem',
+                        background: colors.paper,
+                        boxShadow: `2px 2px 0 0 ${colors.sky}`,
+                        outline: 'none'
+                      }}
                     >
                       <option value="" disabled>Select branch</option>
                       {['MECHATRONICS', 'AIDS', 'COMPUTER SCIENCE', 'ROBOTICS AND AI', 'CIVIL', 'MECHANICAL'].map((b) => (
@@ -567,7 +575,15 @@ export default function SdgDashboard() {
                           onChange={(e) => setNewLeaderName(e.target.value)}
                           placeholder="Leader Name"
                           required
-                          style={{ padding: '4px', border: `1px solid ${colors.ink}` }}
+                          style={{ 
+                            padding: '6px 12px', 
+                            border: `2px solid ${colors.ink}`,
+                            fontFamily: fonts.sans,
+                            fontSize: '0.9rem',
+                            background: colors.paper,
+                            boxShadow: `2px 2px 0 0 ${colors.sky}`,
+                            outline: 'none'
+                          }}
                         />
                         <strong>({m.email}) [Leader]</strong>
                         <SmallButton type="submit" style={{ background: colors.orange, color: colors.white, boxShadow: `2px 2px 0 ${colors.maroon}` }}>Save</SmallButton>
@@ -582,7 +598,15 @@ export default function SdgDashboard() {
                           onChange={(e) => setNewMemberEmail(e.target.value)}
                           placeholder="New Email"
                           required
-                          style={{ padding: '4px', border: `1px solid ${colors.ink}` }}
+                          style={{ 
+                            padding: '6px 12px', 
+                            border: `2px solid ${colors.ink}`,
+                            fontFamily: fonts.sans,
+                            fontSize: '0.9rem',
+                            background: colors.paper,
+                            boxShadow: `2px 2px 0 0 ${colors.sky}`,
+                            outline: 'none'
+                          }}
                         />
                         <SmallButton type="submit" style={{ background: colors.orange, color: colors.white, boxShadow: `2px 2px 0 ${colors.maroon}` }}>Save</SmallButton>
                         <SmallButton type="button" onClick={() => setEditingMemberEmail(null)} style={{ background: colors.muted, color: colors.white, borderColor: colors.muted, boxShadow: 'none' }}>Cancel</SmallButton>
