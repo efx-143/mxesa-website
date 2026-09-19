@@ -124,6 +124,7 @@ const SmallButton = styled.button`
 
 const ActionRow = styled.div`
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   align-items: center;
 `;
@@ -520,7 +521,7 @@ export default function SdgDashboard() {
               <p>
                 <strong>Branch:</strong>{' '}
                 {isEditingBranch ? (
-                  <form onSubmit={handleEditBranch} style={{ display: 'inline-flex', gap: '8px', alignItems: 'center', marginLeft: '8px' }}>
+                  <form onSubmit={handleEditBranch} style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginLeft: '8px' }}>
                     <select
                       value={newBranch}
                       onChange={(e) => setNewBranch(e.target.value)}
@@ -568,7 +569,7 @@ export default function SdgDashboard() {
                 {team.members.map((m) => (
                   <li key={m.email} style={{ marginBottom: '8px' }}>
                     {m.uid === team.leader_uid && isEditingLeaderName ? (
-                      <form onSubmit={handleEditLeaderName} style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
+                      <form onSubmit={handleEditLeaderName} style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
                         <input
                           type="text"
                           value={newLeaderName}
@@ -590,7 +591,7 @@ export default function SdgDashboard() {
                         <SmallButton type="button" onClick={() => setIsEditingLeaderName(false)} style={{ background: colors.muted, color: colors.white, borderColor: colors.muted, boxShadow: 'none' }}>Cancel</SmallButton>
                       </form>
                     ) : editingMemberEmail === m.email ? (
-                      <form onSubmit={(e) => handleEditMemberEmail(e, m.email)} style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
+                      <form onSubmit={(e) => handleEditMemberEmail(e, m.email)} style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
                         <strong>{m.name || 'No Name'}</strong> - 
                         <input
                           type="email"
@@ -668,7 +669,7 @@ export default function SdgDashboard() {
                           style={{
                             padding: '12px',
                             border: `2px solid ${colors.ink}`,
-                            flex: 1,
+                            flex: '1 1 200px',
                           }}
                         />
                         <input
@@ -680,7 +681,7 @@ export default function SdgDashboard() {
                           style={{
                             padding: '12px',
                             border: `2px solid ${colors.ink}`,
-                            flex: 1,
+                            flex: '1 1 200px',
                           }}
                         />
                       </ActionRow>
