@@ -96,6 +96,32 @@ const Button = styled.button`
   }
 `;
 
+const SmallButton = styled.button`
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  background: ${colors.paper};
+  color: ${colors.ink};
+  border: 2px solid ${colors.ink};
+  font-family: ${fonts.mono};
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 ${colors.ink};
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
+  margin-left: ${(props) => props.$marginLeft || '0'};
+
+  &:hover:not(:disabled) {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 ${colors.ink};
+  }
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+`;
+
 const ActionRow = styled.div`
   display: flex;
   gap: 12px;
@@ -506,22 +532,22 @@ export default function SdgDashboard() {
                         <option key={b} value={b}>{b}</option>
                       ))}
                     </select>
-                    <button type="submit" style={{ padding: '4px 8px', background: colors.orange, color: colors.white, border: 'none', cursor: 'pointer' }}>Save</button>
-                    <button type="button" onClick={() => setIsEditingBranch(false)} style={{ padding: '4px 8px', background: colors.muted, color: colors.white, border: 'none', cursor: 'pointer' }}>Cancel</button>
+                    <SmallButton type="submit" style={{ background: colors.orange, color: colors.white, boxShadow: `2px 2px 0 ${colors.maroon}` }}>Save</SmallButton>
+                    <SmallButton type="button" onClick={() => setIsEditingBranch(false)} style={{ background: colors.muted, color: colors.white, borderColor: colors.muted, boxShadow: 'none' }}>Cancel</SmallButton>
                   </form>
                 ) : (
                   <>
                     {team.branch || 'Not provided'}
                     {user.uid === team.leader_uid && (
-                      <button
+                      <SmallButton
+                        $marginLeft="12px"
                         onClick={() => {
                           setIsEditingBranch(true);
                           setNewBranch(team.branch || 'MECHATRONICS');
                         }}
-                        style={{ marginLeft: '12px', padding: '2px 8px', fontSize: '0.8rem', cursor: 'pointer' }}
                       >
                         Edit Branch
-                      </button>
+                      </SmallButton>
                     )}
                   </>
                 )}
@@ -544,8 +570,8 @@ export default function SdgDashboard() {
                           style={{ padding: '4px', border: `1px solid ${colors.ink}` }}
                         />
                         <strong>({m.email}) [Leader]</strong>
-                        <button type="submit" style={{ padding: '4px 8px', background: colors.orange, color: colors.white, border: 'none', cursor: 'pointer' }}>Save</button>
-                        <button type="button" onClick={() => setIsEditingLeaderName(false)} style={{ padding: '4px 8px', background: colors.muted, color: colors.white, border: 'none', cursor: 'pointer' }}>Cancel</button>
+                        <SmallButton type="submit" style={{ background: colors.orange, color: colors.white, boxShadow: `2px 2px 0 ${colors.maroon}` }}>Save</SmallButton>
+                        <SmallButton type="button" onClick={() => setIsEditingLeaderName(false)} style={{ background: colors.muted, color: colors.white, borderColor: colors.muted, boxShadow: 'none' }}>Cancel</SmallButton>
                       </form>
                     ) : editingMemberEmail === m.email ? (
                       <form onSubmit={(e) => handleEditMemberEmail(e, m.email)} style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
@@ -558,8 +584,8 @@ export default function SdgDashboard() {
                           required
                           style={{ padding: '4px', border: `1px solid ${colors.ink}` }}
                         />
-                        <button type="submit" style={{ padding: '4px 8px', background: colors.orange, color: colors.white, border: 'none', cursor: 'pointer' }}>Save</button>
-                        <button type="button" onClick={() => setEditingMemberEmail(null)} style={{ padding: '4px 8px', background: colors.muted, color: colors.white, border: 'none', cursor: 'pointer' }}>Cancel</button>
+                        <SmallButton type="submit" style={{ background: colors.orange, color: colors.white, boxShadow: `2px 2px 0 ${colors.maroon}` }}>Save</SmallButton>
+                        <SmallButton type="button" onClick={() => setEditingMemberEmail(null)} style={{ background: colors.muted, color: colors.white, borderColor: colors.muted, boxShadow: 'none' }}>Cancel</SmallButton>
                       </form>
                     ) : (
                       <>
@@ -568,28 +594,28 @@ export default function SdgDashboard() {
                           <>
                             <strong>[Leader]</strong>
                             {user.uid === team.leader_uid && (
-                              <button
+                              <SmallButton
+                                $marginLeft="12px"
                                 onClick={() => {
                                   setIsEditingLeaderName(true);
                                   setNewLeaderName(m.name || '');
                                 }}
-                                style={{ marginLeft: '12px', padding: '2px 8px', fontSize: '0.8rem', cursor: 'pointer' }}
                               >
                                 Edit Name
-                              </button>
+                              </SmallButton>
                             )}
                           </>
                         )}
                         {user.uid === team.leader_uid && m.uid !== team.leader_uid && (
-                          <button
+                          <SmallButton
+                            $marginLeft="12px"
                             onClick={() => {
                               setEditingMemberEmail(m.email);
                               setNewMemberEmail(m.email);
                             }}
-                            style={{ marginLeft: '12px', padding: '2px 8px', fontSize: '0.8rem', cursor: 'pointer' }}
                           >
                             Edit Email
-                          </button>
+                          </SmallButton>
                         )}
                       </>
                     )}
