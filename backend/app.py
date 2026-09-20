@@ -547,6 +547,60 @@ def delete_mxesa_member(member_id):
         print("Error deleting member:", e)
         return jsonify({'error': 'Internal server error'}), 500
 
+@app.route('/api/admin/sdg/teams/<team_id>/status', methods=['POST'])
+def update_sdg_team_status(team_id):
+    if not verify_admin_token(request):
+        return jsonify({'error': 'Unauthorized'}), 401
+    try:
+        data = request.json
+        status = data.get('status')
+        custom_message = data.get('custom_message', '')
+        
+        team_ref = db.collection('sdg_teams').document(team_id)
+        team = team_ref.get()
+        if not team.exists:
+            return jsonify({'error': 'Team not found'}), 404
+            
+        update_data = {}
+        if status:
+            update_data['status'] = status
+        update_data['custom_message'] = custom_message
+        
+        team_ref.update(update_data)
+        
+        return jsonify({'message': 'Team status updated successfully'}), 200
+    except Exception as e:
+        print("Error updating team status:", e)
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/admin/sdg/settings', methods=['GET', 'POST'])
+def handle_sdg_settings():
+    if not verify_admin_token(request):
+        return jsonify({'error': 'Unauthorized'}), 401
+        
+    settings_ref = db.collection('settings').document('sdg_ideathon')
+    
+    if request.method == 'GET':
+        try:
+            doc = settings_ref.get()
+            if doc.exists:
+                return jsonify(doc.to_dict()), 200
+            else:
+                return jsonify({'registrations_closed': False}), 200
+        except Exception as e:
+            print("Error getting settings:", e)
+            return jsonify({'error': 'Internal server error'}), 500
+            
+    if request.method == 'POST':
+        try:
+            data = request.json
+            registrations_closed = data.get('registrations_closed', False)
+            settings_ref.set({'registrations_closed': registrations_closed}, merge=True)
+            return jsonify({'message': 'Settings updated successfully'}), 200
+        except Exception as e:
+            print("Error updating settings:", e)
+            return jsonify({'error': 'Internal server error'}), 500
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'])
 def catch_all(path):

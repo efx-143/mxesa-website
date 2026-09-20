@@ -139,6 +139,8 @@ export default function Admin() {
   // SDG State
   const [sdgTeams, setSdgTeams] = useState([]);
   const [expandedRow, setExpandedRow] = useState(null);
+  const [registrationsClosed, setRegistrationsClosed] = useState(false);
+  const [teamStatusMap, setTeamStatusMap] = useState({});
 
   const toggleExpandedRow = (id) => {
     setExpandedRow(expandedRow === id ? null : id);
@@ -178,8 +180,46 @@ export default function Admin() {
 
   const fetchAllData = (token) => {
     fetchSdgTeams(token);
+    fetchSdgSettings(token);
     fetchMxesaTeam();
     fetchGalleryImages();
+  };
+
+  const fetchSdgSettings = async (token) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/sdg/settings`, {
+        headers: { 'Authorization': `Admin ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRegistrationsClosed(data.registrations_closed);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleToggleRegistrations = async () => {
+    try {
+      const token = localStorage.getItem('admin_token');
+      const res = await fetch(`${API_BASE}/api/admin/sdg/settings`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Admin ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ registrations_closed: !registrationsClosed })
+      });
+      if (res.ok) {
+        setRegistrationsClosed(!registrationsClosed);
+        alert(`Registrations are now ${!registrationsClosed ? 'CLOSED' : 'OPEN'}`);
+      } else {
+        alert('Failed to update settings');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error updating settings');
+    }
   };
 
   const handleLogin = (e) => {
@@ -210,6 +250,14 @@ export default function Admin() {
       if (res.ok) {
         const data = await res.json();
         setSdgTeams(data.teams);
+        const statuses = {};
+        data.teams.forEach(t => {
+          statuses[t.id] = {
+            status: t.status || 'pending',
+            custom_message: t.custom_message || ''
+          };
+        });
+        setTeamStatusMap(statuses);
       } else {
         console.error('Failed to fetch SDG teams');
       }
@@ -452,6 +500,39 @@ export default function Admin() {
     }
   };
 
+  const handleStatusChange = (teamId, field, value) => {
+    setTeamStatusMap(prev => ({
+      ...prev,
+      [teamId]: {
+        ...prev[teamId],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleSaveTeamStatus = async (teamId) => {
+    try {
+      const token = localStorage.getItem('admin_token');
+      const res = await fetch(`${API_BASE}/api/admin/sdg/teams/${teamId}/status`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Admin ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(teamStatusMap[teamId])
+      });
+      if (res.ok) {
+        alert('Team status saved successfully!');
+        fetchSdgTeams(token);
+      } else {
+        alert('Failed to save team status');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error saving team status');
+    }
+  };
+
   if (!isLoggedIn) {
     return (
       <PageRoot>
@@ -505,28 +586,50 @@ export default function Admin() {
         </TabContainer>
 
         {activeTab === 'sdg' && (
-          <Card>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ margin: 0 }}>SDG Ideathon Teams</h2>
-              <Button onClick={downloadCSV}>Download CSV</Button>
-            </div>
-            {loading ? (
-              <p>Loading teams...</p>
-            ) : sdgTeams.length === 0 ? (
-              <p>No teams registered yet.</p>
-            ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <Table>
-                  <thead>
-                    <tr>
-                      <th>Sr No</th>
-                      <th>Team</th>
-                      <th>Heads</th>
-                      <th>Idea</th>
-                      <th>Video Link</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
+          <>
+            <Card style={{ padding: '20px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h3 style={{ margin: 0 }}>Global Settings</h3>
+                  <p style={{ margin: '8px 0 0', color: colors.muted }}>
+                    Toggle this to close registrations. When closed, teams cannot edit their details and will see their Phase 2 status.
+                  </p>
+                </div>
+                <Button 
+                  onClick={handleToggleRegistrations}
+                  style={{ 
+                    background: registrationsClosed ? colors.maroon : colors.orange,
+                    boxShadow: `4px 4px 0 ${colors.ink}`
+                  }}
+                >
+                  {registrationsClosed ? 'RE-OPEN REGISTRATIONS' : 'CLOSE REGISTRATIONS'}
+                </Button>
+              </div>
+            </Card>
+
+            <Card>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ margin: 0 }}>SDG Ideathon Teams</h2>
+                <Button onClick={downloadCSV}>Download CSV</Button>
+              </div>
+              {loading ? (
+                <p>Loading teams...</p>
+              ) : sdgTeams.length === 0 ? (
+                <p>No teams registered yet.</p>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <Table>
+                    <thead>
+                      <tr>
+                        <th>Sr No</th>
+                        <th>Team</th>
+                        <th>Heads</th>
+                        <th>Idea</th>
+                        <th>Status</th>
+                        <th>Video Link</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
                   <tbody>
                     {sdgTeams.map((team, index) => (
                       <React.Fragment key={team.id}>
@@ -537,6 +640,18 @@ export default function Admin() {
                             {team.members?.find(m => m.uid === team.leader_uid)?.name || 'Leader'}
                           </td>
                           <td>{team.submission?.idea_title || '-'}</td>
+                          <td>
+                            <span style={{ 
+                              padding: '4px 8px', 
+                              borderRadius: '4px',
+                              background: team.status === 'selected' ? '#d4edda' : team.status === 'rejected' ? '#f8d7da' : '#fff3cd',
+                              color: team.status === 'selected' ? '#155724' : team.status === 'rejected' ? '#721c24' : '#856404',
+                              fontWeight: 'bold',
+                              fontSize: '0.85rem'
+                            }}>
+                              {(team.status || 'PENDING').toUpperCase()}
+                            </span>
+                          </td>
                           <td>
                             {team.submission?.demo_video_link ? (
                               <a href={team.submission.demo_video_link} target="_blank" rel="noreferrer" style={{ color: colors.orange, textDecoration: 'underline' }} onClick={(e) => e.stopPropagation()}>
@@ -552,20 +667,47 @@ export default function Admin() {
                         </tr>
                         {expandedRow === team.id && (
                           <tr style={{ background: colors.paper }}>
-                            <td colSpan="6">
-                              <div style={{ padding: '12px' }}>
-                                <strong>Members:</strong>
-                                <ul>
-                                  {team.members?.map((m, idx) => (
-                                    <li key={idx}>{m.name} ({m.email}) {m.uid === team.leader_uid ? '[Leader]' : ''}</li>
-                                  ))}
-                                </ul>
-                                <p style={{ marginTop: '8px', fontSize: '0.9rem', color: colors.muted }}>
-                                  Track: {team.sdg_track} <br />
-                                  Branch: {team.branch || 'N/A'} <br />
-                                  Leader Phone: {team.leader_phone || 'N/A'} <br />
-                                  Phase 1 Desc: {team.submission?.phase1_description || '-'}
-                                </p>
+                            <td colSpan="7">
+                              <div style={{ padding: '20px', display: 'flex', gap: '40px', flexWrap: 'wrap' }}>
+                                <div style={{ flex: '1 1 300px' }}>
+                                  <strong>Members:</strong>
+                                  <ul>
+                                    {team.members?.map((m, idx) => (
+                                      <li key={idx}>{m.name} ({m.email}) {m.uid === team.leader_uid ? '[Leader]' : ''}</li>
+                                    ))}
+                                  </ul>
+                                  <p style={{ marginTop: '8px', fontSize: '0.9rem', color: colors.muted }}>
+                                    Track: {team.sdg_track} <br />
+                                    Branch: {team.branch || 'N/A'} <br />
+                                    Leader Phone: {team.leader_phone || 'N/A'} <br />
+                                    Phase 1 Desc: {team.submission?.phase1_description || '-'}
+                                  </p>
+                                </div>
+                                <div style={{ flex: '1 1 300px', background: '#fff', padding: '16px', border: `2px solid ${colors.ink}` }}>
+                                  <h4 style={{ marginTop: 0, marginBottom: '12px', fontFamily: fonts.display }}>Phase 2 Selection</h4>
+                                  <FormGroup>
+                                    <label>Status</label>
+                                    <select 
+                                      value={teamStatusMap[team.id]?.status || 'pending'} 
+                                      onChange={(e) => handleStatusChange(team.id, 'status', e.target.value)}
+                                      style={{ width: '100%', padding: '8px', border: `2px solid ${colors.ink}`, fontFamily: fonts.mono, marginBottom: '12px' }}
+                                    >
+                                      <option value="pending">Pending</option>
+                                      <option value="selected">Selected</option>
+                                      <option value="rejected">Rejected</option>
+                                    </select>
+                                  </FormGroup>
+                                  <FormGroup>
+                                    <label>Custom Message (Feedback/Instructions)</label>
+                                    <TextArea 
+                                      value={teamStatusMap[team.id]?.custom_message || ''} 
+                                      onChange={(e) => handleStatusChange(team.id, 'custom_message', e.target.value)}
+                                      placeholder="e.g. Please focus more on the UI design..."
+                                      style={{ minHeight: '80px', padding: '8px' }}
+                                    />
+                                  </FormGroup>
+                                  <Button onClick={() => handleSaveTeamStatus(team.id)}>Save Status</Button>
+                                </div>
                               </div>
                             </td>
                           </tr>
@@ -576,7 +718,8 @@ export default function Admin() {
                 </Table>
               </div>
             )}
-          </Card>
+            </Card>
+          </>
         )}
 
         {activeTab === 'mxesa' && (

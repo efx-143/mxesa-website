@@ -40,5 +40,20 @@ service cloud.firestore {
       allow delete: if request.auth != null && 
                     request.auth.uid == resource.data.leader_uid;
     }
+
+    match /settings/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+    
+    match /mxesa_team/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+    
+    match /gallery/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
   }
 }

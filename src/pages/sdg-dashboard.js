@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
-import { onAuthStateChange, signOutUser } from 'lib/firebase';
+import { onAuthStateChange, signOutUser, db } from 'lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import Header from 'components/Header';
 import { colors, fonts, breakpoints } from 'styles/tokens';
 
@@ -166,6 +167,7 @@ export default function SdgDashboard() {
   const [user, setUser] = useState(null);
   const [team, setTeam] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [registrationsClosed, setRegistrationsClosed] = useState(false);
 
   // Form states
   const [teamName, setTeamName] = useState('');
@@ -197,6 +199,18 @@ export default function SdgDashboard() {
     process.env.NEXT_PUBLIC_SDG_API_BASE_URL || '';
 
   useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const docSnap = await getDoc(doc(db, 'settings', 'sdg_ideathon'));
+        if (docSnap.exists()) {
+          setRegistrationsClosed(docSnap.data().registrations_closed);
+        }
+      } catch (err) {
+        console.error('Error fetching settings:', err);
+      }
+    };
+    fetchSettings();
+
     const unsubscribe = onAuthStateChange(async (firebaseUser) => {
       if (!firebaseUser) {
         router.push('/sdg-login');
@@ -513,6 +527,25 @@ export default function SdgDashboard() {
           </Card>
         ) : (
           <>
+            {registrationsClosed && (
+              <Card style={{ padding: '20px', marginBottom: '24px', background: team.status === 'selected' ? '#d4edda' : team.status === 'rejected' ? '#f8d7da' : '#fff3cd', borderColor: team.status === 'selected' ? '#c3e6cb' : team.status === 'rejected' ? '#f5c6cb' : '#ffeeba' }}>
+                <h3 style={{ margin: 0, color: team.status === 'selected' ? '#155724' : team.status === 'rejected' ? '#721c24' : '#856404' }}>
+                  {team.status === 'selected' ? '🎉 Congratulations! Your team has been selected for Phase 2!' : team.status === 'rejected' ? '❌ Thank you for participating. Unfortunately, your team was not selected for Phase 2.' : '⏳ Your idea is currently under review.'}
+                </h3>
+                {team.status === 'selected' && (
+                  <p style={{ marginTop: '12px', color: '#155724' }}>
+                    Please start preparing your presentation. We will share the template and schedule shortly.
+                  </p>
+                )}
+                {team.custom_message && (
+                  <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(255, 255, 255, 0.7)', border: '1px solid currentColor', borderRadius: '4px', color: 'inherit' }}>
+                    <strong>Admin Message:</strong><br/>
+                    {team.custom_message}
+                  </div>
+                )}
+              </Card>
+            )}
+
             <Card>
               <CardTitle>{team.name}</CardTitle>
               <p>
@@ -520,7 +553,7 @@ export default function SdgDashboard() {
               </p>
               <p>
                 <strong>Branch:</strong>{' '}
-                {isEditingBranch ? (
+                {isEditingBranch && !registrationsClosed ? (
                   <form onSubmit={handleEditBranch} style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginLeft: '8px' }}>
                     <select
                       value={newBranch}
@@ -547,7 +580,7 @@ export default function SdgDashboard() {
                 ) : (
                   <>
                     {team.branch || 'Not provided'}
-                    {user.uid === team.leader_uid && (
+                    {user.uid === team.leader_uid && !registrationsClosed && (
                       <SmallButton
                         $marginLeft="12px"
                         onClick={() => {
@@ -568,7 +601,7 @@ export default function SdgDashboard() {
               <ul>
                 {team.members.map((m) => (
                   <li key={m.email} style={{ marginBottom: '8px' }}>
-                    {m.uid === team.leader_uid && isEditingLeaderName ? (
+                    {m.uid === team.leader_uid && isEditingLeaderName && !registrationsClosed ? (
                       <form onSubmit={handleEditLeaderName} style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
                         <input
                           type="text"
@@ -590,7 +623,7 @@ export default function SdgDashboard() {
                         <SmallButton type="submit" style={{ background: colors.orange, color: colors.white, boxShadow: `2px 2px 0 ${colors.maroon}` }}>Save</SmallButton>
                         <SmallButton type="button" onClick={() => setIsEditingLeaderName(false)} style={{ background: colors.muted, color: colors.white, borderColor: colors.muted, boxShadow: 'none' }}>Cancel</SmallButton>
                       </form>
-                    ) : editingMemberEmail === m.email ? (
+                    ) : editingMemberEmail === m.email && !registrationsClosed ? (
                       <form onSubmit={(e) => handleEditMemberEmail(e, m.email)} style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
                         <strong>{m.name || 'No Name'}</strong> - 
                         <input
@@ -618,7 +651,7 @@ export default function SdgDashboard() {
                         {m.uid === team.leader_uid && (
                           <>
                             <strong>[Leader]</strong>
-                            {user.uid === team.leader_uid && (
+                            {user.uid === team.leader_uid && !registrationsClosed && (
                               <SmallButton
                                 $marginLeft="12px"
                                 onClick={() => {
@@ -631,7 +664,7 @@ export default function SdgDashboard() {
                             )}
                           </>
                         )}
-                        {user.uid === team.leader_uid && m.uid !== team.leader_uid && (
+                        {user.uid === team.leader_uid && m.uid !== team.leader_uid && !registrationsClosed && (
                           <SmallButton
                             $marginLeft="12px"
                             onClick={() => {
@@ -648,7 +681,7 @@ export default function SdgDashboard() {
                 ))}
               </ul>
 
-              {user.uid === team.leader_uid && (
+              {user.uid === team.leader_uid && !registrationsClosed && (
                 <div style={{ marginTop: '24px' }}>
                   <h3
                     style={{ fontFamily: fonts.display, marginBottom: '12px' }}
@@ -708,7 +741,7 @@ export default function SdgDashboard() {
                 </>
               ) : null}
 
-              {user.uid === team.leader_uid && isEditingSubmission ? (
+              {user.uid === team.leader_uid && isEditingSubmission && !registrationsClosed ? (
                 <form onSubmit={handleSubmission}>
                   <FormGroup>
                     <label>Idea Title</label>
@@ -766,11 +799,13 @@ export default function SdgDashboard() {
                     )}
                   </p>
                   <p style={{ marginTop: '20px', color: colors.muted }}>
-                    {team.submission?.idea_title 
-                      ? 'You can update your submission if needed.' 
-                      : 'Only the team leader can edit the submission.'}
+                    {registrationsClosed 
+                      ? 'Submissions are locked for review.'
+                      : team.submission?.idea_title 
+                        ? 'You can update your submission if needed.' 
+                        : 'Only the team leader can edit the submission.'}
                   </p>
-                  {user.uid === team.leader_uid && (
+                  {user.uid === team.leader_uid && !registrationsClosed && (
                     <Button onClick={() => setIsEditingSubmission(true)} style={{ marginTop: '12px' }}>
                       {team.submission?.idea_title ? 'Edit Submission' : 'Add Submission'}
                     </Button>

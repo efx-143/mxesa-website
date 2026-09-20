@@ -1,7 +1,10 @@
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import styled from 'styled-components';
 import Header from 'components/Header';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from 'lib/firebase';
 import { breakpoints, colors, fonts } from 'styles/tokens';
 
 const SDGs = [
@@ -229,6 +232,22 @@ const CtaButton = styled(Link)`
 `;
 
 export default function SdgIdeathon() {
+  const [registrationsClosed, setRegistrationsClosed] = useState(false);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const docSnap = await getDoc(doc(db, 'settings', 'sdg_ideathon'));
+        if (docSnap.exists()) {
+          setRegistrationsClosed(docSnap.data().registrations_closed);
+        }
+      } catch (err) {
+        console.error('Error fetching settings:', err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   return (
     <PageRoot>
       <Head>
@@ -253,7 +272,16 @@ export default function SdgIdeathon() {
             track, and submit your Phase 1 idea.
           </PageSubtitle>
           <CtaWrapper style={{ marginTop: '30px' }}>
-            <CtaButton href="/sdg-login">Register / Apply</CtaButton>
+            {registrationsClosed ? (
+              <>
+                <CtaButton href="/sdg-login">Team Dashboard</CtaButton>
+                <p style={{ marginTop: '16px', fontSize: '0.9rem', color: colors.sky }}>
+                  Registrations are now closed. Existing teams can login here.
+                </p>
+              </>
+            ) : (
+              <CtaButton href="/sdg-login">Register / Apply</CtaButton>
+            )}
           </CtaWrapper>
         </PageHero>
 
@@ -314,7 +342,11 @@ export default function SdgIdeathon() {
               ))}
             </SdgGrid>
             <CtaWrapper>
-              <CtaButton href="/sdg-login">Ready? Lock your track.</CtaButton>
+              {registrationsClosed ? (
+                <CtaButton href="/sdg-login">Check Team Dashboard</CtaButton>
+              ) : (
+                <CtaButton href="/sdg-login">Ready? Lock your track.</CtaButton>
+              )}
             </CtaWrapper>
           </SectionInner>
         </Section>
