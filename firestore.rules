@@ -42,18 +42,15 @@ service cloud.firestore {
     }
 
     match /settings/{document=**} {
-      allow read: if true;
-      allow write: if false;
+      allow read, write: if true;
     }
     
     match /mxesa_team/{document=**} {
-      allow read: if true;
-      allow write: if false;
+      allow read, write: if true;
     }
     
     match /gallery/{document=**} {
-      allow read: if true;
-      allow write: if false;
+      allow read, write: if true;
     }
   }
 }
